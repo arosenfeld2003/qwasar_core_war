@@ -1,0 +1,10 @@
+# program
+corewar
+corewars
+*.o
+*.dSYM
+
+# vim stuff
+*.swp
+*.swo
+*.swa
