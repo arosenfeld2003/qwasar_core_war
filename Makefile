@@ -5,11 +5,14 @@
 PROG = corewar
 OPTS = -Wall -Wextra -g #-Werror 
 
-corewar: corewar.o
-	cc $(OPTS) corewar.o -o $(PROG)
+corewar: corewar.o op.o
+	cc $(OPTS) corewar.o op.o -o $(PROG)
 
-corewar.o: corewar.c op.h
+corewar.o: corewar.c corewar.h
 	cc $(OPTS) -c $(PROG).c
+
+op.o: op.c op.h
+	cc $(OPTS) -c op.c
 
 clean:
 	rm *.o

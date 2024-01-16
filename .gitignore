@@ -5,6 +5,7 @@ corewars
 *.dSYM
 
 # vim stuff
+*.vim
 *.swp
 *.swo
 *.swa
