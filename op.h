@@ -22,7 +22,8 @@
 /* r1 <--> rx */
 #define REG_NUMBER 16
 
-typedef char args_type_t; typedef unsigned char code_t;
+typedef char args_type_t;
+typedef unsigned char code_t;
 
 enum parameter_types {
     T_REG = 1,
@@ -35,13 +36,14 @@ typedef struct champion champion_t;
 typedef struct core_s core_t;
 
 struct op_s {
-    char *mnemonique;
-    char nbr_args;
+    char *mnemonique;                       /* name of operation */
+    char nbr_args;                          /* number of args taken */
     args_type_t type[MAX_ARGS_NUMBER];
     char code;
     int nbr_cycles;
     int (*inst)(champion_t *, core_t *, code_t, int *);
 };
+typedef struct op_s op_t;
 
 enum op_types {
     OP_LIVE,
@@ -63,7 +65,6 @@ enum op_types {
     OP_NOTHING,
     OP_NB
 };
-typedef struct op_s op_t;
 
 /* size (in bytes) */
 #define IND_SIZE 2
