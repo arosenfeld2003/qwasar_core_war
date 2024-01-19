@@ -11,7 +11,7 @@ static char *USAGE = "usage: ./corewar [-dump nbr_cycle] [[-n prog_number] "
 
 int main(int argc, char **argv)
 {
-    int registers[REG_NUMBER][REG_SIZE] = {};
+    int registers[MEM_SIZE] = {};                     /* create memory for vm */
     char *next_cmd = NULL;
     int carry_flag = 0;                                 /* bool: 1: game over */
 
