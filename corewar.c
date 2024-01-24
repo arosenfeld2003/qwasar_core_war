@@ -9,48 +9,73 @@
 static char *USAGE = "usage: ./corewar [-dump nbr_cycle] [[-n prog_number] "
                      "[-a load_address] prog_name] ...";
 
-int main(int argc, char **argv)
-{
-    int registers[REG_NUMBER][REG_SIZE] = {};
-    char *next_cmd = NULL;
-    int carry_flag = 0;                                 /* bool: 1: game over */
+//int main(int argc, char **argv) {
+//    int registers[REG_NUMBER][REG_SIZE] = {};
+//    char *next_cmd = NULL;
+//    int carry_flag = 0;                                 /* bool: 1: game over */
+//
+//    // handle options & args
+//    if (argc == 1) {        /* no args */
+//        printf("%s\n", USAGE);
+//        exit(2);
+//    }
+//
+//    // open file
+//    // read into memory
+//    // assign "programs" name/number
+//
+//    // use assembler to covert file
+//    // layout in memory
+//
+//    // main loop through memory
+//    int i = 0;
+//    while (carry_flag == 0) {
+//        if (i >= REG_NUMBER)                                /* stay in bounds */
+//            i = i % REG_NUMBER;
+//
+//        // run instructions
+//        handle_cmd(registers[i]);
+//
+//        printf("The program NBR_OF_PROGRAM(NAME_OF_PROGRAM) is alive.");
+//        i++;
+//    }
+//
+//    /* game over */
+//    printf("The player NBR_OF_PROGRAM(NAME_OF_PROGRAM) is done.");
+//
+//    return 0;
+//}
 
-    // handle options & args
-    if (argc == 1) {        /* no args */
-        printf("%s\n", USAGE);
-        exit(2);
+int main() {
+    // allocate memory for the VM
+    unsigned char *vm = malloc(MEM_SIZE * sizeof(unsigned char));
+
+    // check for allocation
+    if (vm == NULL) {
+        fprintf(stderr, "Memory allocation for VM has failed.\n");
+    } else {
+        printf("Memory allocation for VM successful");
     }
 
-    // open file
-    // read into memory
-    // assign "programs" name/number
-
-    // use assembler to covert file
-    // layout in memory
-
-    // main loop through memory
-    int i = 0;
-    while (carry_flag == 0) {
-        if (i >= REG_NUMBER)                                /* stay in bounds */
-            i = i % REG_NUMBER;
-
-        // run instructions
-        handle_cmd(registers[i]);
-
-        printf("The program NBR_OF_PROGRAM(NAME_OF_PROGRAM) is alive.");
-        i++;
+    // initialize memory to 0 (for now) -> maybe another value is better?
+    for (int i = 0; i < MEM_SIZE; i++) {
+        vm[i] = 0;
     }
 
-    /* game over */
-    printf("The player NBR_OF_PROGRAM(NAME_OF_PROGRAM) is done.");
+    // CORE VM LOGIC HERE
+
+    // free the VM
+
+    free(vm);
+    printf("Memory allocation for VM freed...");
 
     return 0;
 }
 
-// TODO
-int handle_cmd(int cmd)
-{
-    switch (cmd) {
-
-    }
-}
+//// TODO
+//int handle_cmd(int cmd)
+//{
+//    switch (cmd) {
+//
+//    }
+//}

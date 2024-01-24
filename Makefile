@@ -8,7 +8,7 @@ OPTS = -Wall -Wextra -g #-Werror
 corewar: corewar.o op.o
 	cc $(OPTS) corewar.o op.o -o $(PROG)
 
-corewar.o: corewar.c corewar.h
+corewar.o: corewar.c op.h
 	cc $(OPTS) -c $(PROG).c
 
 op.o: op.c op.h
