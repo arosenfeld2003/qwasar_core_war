@@ -1,4 +1,5 @@
 #include "op.h"
+#include "instructions.c"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,6 +20,9 @@ int main(int argc, char **argv) {
         printf("%s\n", USAGE);
         exit(2);
     }
+
+    // array to track players alive...
+    int players_alive[MAX_CHAMPIONS] = {0};
 
     // for now just assign a number for the program -> this will be done by VM
     //
