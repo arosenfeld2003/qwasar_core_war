@@ -11,9 +11,12 @@ vm:
 assembler:
 	$(CC) $(CFLAGS) -o asm src/assembler/main.c src/assembler/assembler.c src/assembler/assembler_utils.c src/common/utils.c -I include
 
+test_vm:
+	$(CC) $(CFLAGS) -o test_vm tests/test_vm.c
+
 clean:
-	rm -f corewar asm
+	rm -f corewar asm test_vm
 
 .PHONY:
-	all clean vm assembler
+	all clean vm assembler test_vm
 
