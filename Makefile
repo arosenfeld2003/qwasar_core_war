@@ -1,21 +1,19 @@
-#
-# Makefile for corewar
-#
+# https://www.gnu.org/software/make/manual/make.html
 
-PROG = corewar
-OPTS = -Wall -Wextra -g #-Werror 
+CC = gcc
+CFLAGS = -Wall -Wextra -Werror
 
-corewar: corewar.o op.o
-	cc $(OPTS) corewar.o op.o -o $(PROG)
+all: vm assembler
 
-corewar.o: corewar.c op.h
-	cc $(OPTS) -c $(PROG).c
+vm:
+	$(CC) $(CFLAGS) -o corewar src/vm/main.c src/vm/vm.c src/vm/vm_utils.c src/common/utils.c -I include
 
-op.o: op.c op.h
-	cc $(OPTS) -c op.c
+assembler:
+	$(CC) $(CFLAGS) -o asm src/assembler/main.c src/assembler/assembler.c src/assembler/assembler_utils.c src/common/utils.c -I include
 
 clean:
-	rm *.o
+	rm -f corewar asm
 
-fclean: clean
-	rm -f $(PROG) a.out
+.PHONY:
+	all clean vm assembler
+

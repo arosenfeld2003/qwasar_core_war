@@ -1,4 +1,4 @@
-#include "op.h"
+#include "include/op.h"
 #include "instructions.c"
 #include <stdio.h>
 #include <stdlib.h>
