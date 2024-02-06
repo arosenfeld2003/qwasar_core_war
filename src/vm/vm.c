@@ -1,5 +1,15 @@
 #include "../../include/header.h"
-#include <stdio.h>
+#include <fcntl.h> // open
+#include <unistd.h> // read, close
+#include <stdio.h> // perror, at least for MVP
+#include <stdlib.h> // malloc, free
+
+typedef struct vm_state {
+    int dump_cycle;       // Cycle number to dump memory (-1 if not used)
+    int next_champion_id; // Next champion ID to assign with -n
+    champion_t champions[MAX_CHAMPIONS]; // Array of champions
+    int champion_count;   // Number of loaded champions
+} vm_state_t;
 
 unsigned char *initialize_vm() {
     // allocate memory for the VM
@@ -27,8 +37,8 @@ void free_vm(unsigned char *vm) {
     printf("Memory allocation for VM freed.");
 }
 
-int handle_mnemonic(unsigned char mnem) {
-    switch (mnem) {
+int handle_cmd(unsigned char cmd) {
+    switch (cmd) {
         case 0x01:
             // (live)
             // Takes 1 parameter:
@@ -149,3 +159,49 @@ int handle_mnemonic(unsigned char mnem) {
     }
     return 0;
 }
+
+void assign_program_numbers(champion_t champions[], int num_champions) {
+    for (int i = 0; i < num_champions; ++i) {
+        champions[i].id = i + 1; // Assign IDs starting from 1
+    }
+}
+
+void load_programs_into_memory(unsigned char *memory, champion_t champions[], int num_champions) {
+    for (int i = 0; i < num_champions; ++i) {
+        int fd = open(champions[i].file_path, O_RDONLY);
+        if (fd == -1) {
+            perror("Error opening file");
+            exit(EXIT_FAILURE);
+        }
+
+        // Allocate memory for the program's code
+        champions[i].code = (unsigned char *)malloc(champions[i].size * sizeof(unsigned char));
+        if (champions[i].code == NULL) {
+            perror("Failed to allocate memory for champion code");
+            close(fd);
+            exit(EXIT_FAILURE);
+        }
+
+        // Read the program into the allocated buffer
+        ssize_t bytes_read = read(fd, champions[i].code, champions[i].size);
+        if (bytes_read == -1) {
+            perror("Error reading file");
+            free(champions[i].code);
+            close(fd);
+            exit(EXIT_FAILURE);
+        }
+
+        // Manually copy the program code into the VM's memory at the specified start address
+        for (ssize_t j = 0; j < bytes_read; ++j) {
+            memory[champions[i].start_address + j] = champions[i].code[j];
+        }
+
+        // Clean up
+        close(fd);
+        // Optionally free the allocated code if it's no longer needed in memory
+        free(champions[i].code);
+        champions[i].code = NULL; // Avoid dangling pointer
+    }
+}
+
+

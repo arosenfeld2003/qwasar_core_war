@@ -23,7 +23,7 @@ int inst_live(int player_num) {
  * parameter is a register. Ex: ld 34, r3 loads the REG_SIZE bytes starting from
  * the Counter + 34 % IDX_MOD into r3.
  */
-int inst_ld(int offset, char* reg) {
+int inst_ld(int offset, ) {
     int dest =
 }
 

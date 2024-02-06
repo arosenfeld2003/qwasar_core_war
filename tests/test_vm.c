@@ -25,7 +25,7 @@ void test_handle_mnemonic(unsigned char *vm) {
     for (int i = 0; i < MEM_SIZE; i++) {
         unsigned char mnem = vm[i];
         if (mnem == 0) continue; // skip empty cells
-        handle_mnemonic(mnem);
+        handle_cmd(mnem);
     }
 }
 

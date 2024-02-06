@@ -5,14 +5,17 @@
 #include <stdlib.h>
 #include "op.h"
 
-// Memory management functions
+// VM functions
 unsigned char *initialize_vm();
 void free_vm(unsigned char *vm);
-int handle_mnemonic(unsigned char mnem);
+int handle_cmd(unsigned char cmd);
 unsigned char read_memory(unsigned char *vm, size_t address);
 void write_memory(unsigned char *vm, size_t address, unsigned char value);
-
+void assign_program_numbers(champion_t champions[], int num_champions);
+void load_programs_into_memory(unsigned char *memory, champion_t champions[], int num_champions);
 
 // more shared function prototypes
+
+
 
 #endif /* HEADER_H */
