@@ -4,6 +4,10 @@ corewars
 *.o
 *.dSYM
 
+# assembler
+asm
+*.cor
+
 # vim stuff
 *.vim
 *.swp

@@ -1,0 +1,108 @@
+//#include "op.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h> // for exit
+
+/*
+ * asm.c
+ *  Assembler for corewar warrior programs
+ */
+
+#define USAGE "usage: ./asm <program>"
+#define MAX_LINE_LENGTH 1024
+#define MAX_INST_LENGTH 3
+#define LDELIMS " \t\n"         /* label delims */
+#define OPDELIMS " \t\n,"       /* operand delims */
+
+typedef struct {
+    char *label;
+    char *instruction;
+    char *operands[3];
+    int operand_count;
+} inst_t;
+
+void parse_program(FILE *input_file);
+void parse_line(char *line, inst_t *inst);
+void output_inst(inst_t *inst);
+
+int main(int argc, char **argv)
+{
+    if (argc !=  2) {
+        fprintf(stderr, "%s\n", USAGE);
+        return 1;
+    }
+
+    // open file
+    FILE *input_file = fopen(argv[1], "r");
+    if (input_file == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+    
+    // create output file
+    FILE *output_file = fopen("a.cor", "w"); // overwrites is file exists
+    if (output_file == NULL) {
+        perror("Error creating output file"); 
+        return 1;
+    }
+
+    // TODO: write header for output
+
+    parse_program(input_file);
+
+    fclose(input_file);
+    fclose(output_file);
+    // TODO free any mallocs
+    return 0;
+}
+
+void parse_program(FILE *input_file)
+{
+    char line[MAX_LINE_LENGTH];
+
+    while (fgets(line, MAX_LINE_LENGTH, input_file)) {
+        inst_t inst = {};
+
+        // TEST
+        printf("Line from file: %s", line); // no \n bc line has it
+
+        parse_line(line, &inst);
+        //write_inst()  // TODO
+        //free_inst() // TODO
+    }
+}
+
+void parse_line(char *line, inst_t *inst)
+{
+    char *token;
+    char *saveptr;  // required by strtok_r to use internally
+
+    // TODO parse .name/.comment
+
+    token = strtok_r(line, LDELIMS, &saveptr); // returns ptr to 1st token
+    if (token && token[strlen(token) - 1] == ':') { // label found
+        inst->label = strdup(token);  // store label name
+        token = strtok_r(NULL, LDELIMS, &saveptr); // pass NULL to continue line
+    }
+
+    if (token) {
+        inst->instruction = strdup(token);  // store instruction to struct
+
+        // parse operands
+        while ((token = strtok_r(NULL, OPDELIMS, &saveptr)) != NULL
+                && inst->operand_count < MAX_INST_LENGTH) {
+            inst->operands[inst->operand_count++] = strdup(token);
+        }
+    }
+    // TEST
+    output_inst(inst);
+    printf("*********\n");
+}
+
+void output_inst(inst_t *inst)
+{
+    printf("Label: %s\n", inst->label);
+    printf("Instruction: %s\n", inst->instruction);
+    for (int i = 0; i < inst->operand_count; i++)
+        printf("Operand %d: %s\n", i, inst->operands[i]);
+}
