@@ -13,7 +13,8 @@
 typedef struct {
     int program_number;
     int instruction_index;
-    int execution_cycles[NUM_INSTRUCTIONS]; // execution cycles for each instruction
+    char **binary_instructions; // binary instructions in each program
+    // int execution_cycles[NUM_INSTRUCTIONS]; // execution cycles for each instruction
 } Program;
 
 // Define the function prototypes
@@ -25,54 +26,64 @@ typedef struct {
 // void execute_instruction(Warrior* warrior, unsigned char* memory) {
 void execute_instruction(Program *program) {
     int current_instruction_index = program->instruction_index;
-    int cycles_to_execute = program->execution_cycles[current_instruction_index];
-    // Simulate execution by waiting for the specified number of cycles
-    // This could involve updating program state, registers, etc.
-    printf("Program %d executing instruction %d for %d cycles\n", program->program_number,current_instruction_index + 1, cycles_to_execute);
-    // Move to the next instruction
-    program->instruction_index++;
+    char *binary_instruction = program->binary_instructions[current_instruction_index];
+    // simulate execution of binary_instruction
+    printf("Program %d executing instruction %d: %s\n", program->program_number,current_instruction_index + 1, binary_instruction);
+    // move to next instruction
+     program->instruction_index++;  
 }
 
 // void schedule(Warrior warriors[], int num_warriors, unsigned char* memory) {
 void schedule(Program programs[NUM_PROGRAMS]) {
     int cycle = 1;
+    int program_index = 0;
+    // Assuming each program has the same num of instructions
+    int num_instructions = NUM_INSTRUCTIONS;
     // int current_warrior_index = 0;
 
     // Main game loop
     while (1) {
         printf("Cycle %d\n", cycle);
-        for (int i = 0; i < NUM_PROGRAMS; i++) {
-            Program *program = &programs[i];
-            int execution_instruction_index = program->instruction_index;
-            if (current_instruction_index < NUM_INSTRUCTIONS) {
-                int execution_cycles = program->execution_cycles[current_instruction_index];
-                // check if the instructions tarts execution on this cycle
-                if (execution_cycles  == cycle) {
-                    execute_instruction(program);
-                }
-            }
+        // for (int i = 0; i < NUM_PROGRAMS; i++) {
+        Program *program = &programs[program_index];
+        int current_instruction_index = program->instruction_index;
+        if (current_instruction_index < num_instructions) {
+            execute_instruction(program);
         }
+        program_index = (program_index + 1) % NUM_PROGRAMS; // Alternate between programs
         // Check if all programs have finished executing
         int all_programs_finished = 1;
         for (int i = 0; i < NUM_PROGRAMS; i++) {
-            if (programs[i].instruction_index < NUM_INSTRUCTIONS) {
+            if (programs[i].instruction_index < num_instructions) {
                 all_programs_finished = 0;
                 break;
             }
         }
+     
         if (all_programs_finished) {
-            break;
+            break; // Exit the loop if all programs have finished executing
         }
-        cycle++;
+        cycle++; // Move to next cycle
     }
 }
 
 int main() {
-    // Initialize warriros ane memory
+    // Initialize programs with binary instructions
+    char *program1_instructions[NUM_INSTRUCTIONS] = {
+        "binary_instruction_1",
+        "binary_instruction_2",
+        "binary_instruction_3",
+        "binary_instruction_4"
+    };
+    char *program2_instructions[NUM_INSTRUCTIONS] = {
+        "binary_instruction_1",
+        "binary_instruction_2",
+        "binary_instruction_3",
+        "binary_instruction_4"
+    };
     Program programs[NUM_PROGRAMS] = {
-         {1, 0, {1, 5, 1, 1, 2, 0, 0}}, // Program 1
-        {2, 0, {3, 1, 5, 1, 0, 0, 0}}, // Program 2
-        {3, 0, {3, 2, 3, 2, 0, 0, 0}}  // Program 3
+        {1, 0, program1_instructions}, // Program 1
+        {2, 0, program2_instructions}, // Program 2
     };
 
     schedule(programs);
@@ -92,6 +103,6 @@ int main() {
 // each champ will have its own counter
 /* vm needs mult counters?
 MARS executes timesharing; single instruction of P1, then single instruction of P2
-
+cycle delta = 5
 
 */
