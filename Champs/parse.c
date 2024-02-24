@@ -17,13 +17,31 @@ void parse_arguments(int argc, char** argv, vm_state_t *vm_state) {
     vm_state->champion_count = 0;
 
     for (int i = 1; i < argc; i++) {
-        
+        // Check argv for -dump
+        if(strcmp(argv[i], "-dump") == 0) {
+            // If there's an argument after -dump
+            if (i + 1 < argc) {
+                vm_state->dump_cycle = atoi(argv[i+1]);
+                i++;
+            } else {
+                printf("Error: -dump option requires number of cycles\n");
+                exit(1);
+            }
+        } else {
+            printf("Error: Too many champion files\n");
+            exit(1);
+        }
     }
 }
 
 
-int main() {
-    char input[] = "  lorem,ipsum  ";
-    printf("Last word: %s\n", last_word(input));
+int main(int argc, char** argv) {
+    vm_state_t vm_state;
+    parse_arguments(argc, argv, &vm_state);
+    printf("Dump cycle: %d\n", vm_state.dump_cycle);
+    printf("Champ count: %d\n", vm_state.champion_count);
+    for (int i = 0; i < vm_state.champion_count; i++) {
+        printf("CHamp file %d: %s\n", i+1, vm_state.champions[i]);
+    }
     return 0;
 }
