@@ -1,38 +1,11 @@
 #include "../include/header.h"
+#include "../include/vm_state.h"
 #include <stdio.h>
 #include <assert.h>
-
-void test_handle_mnemonic(unsigned char *vm) {
-    // Hardcode some commands here for testing...
-    vm[0] = 0x01;
-    vm[1] = 0x02;
-    vm[2] = 0x03;
-    vm[3] = 0x04;
-    vm[4] = 0x05;
-    vm[5] = 0x06;
-    vm[6] = 0x07;
-    vm[7] = 0x08;
-    vm[8] = 0x09;
-    vm[9] = 0x0a;
-    vm[10] = 0x0b;
-    vm[11] = 0x0c;
-    vm[12] = 0x0d;
-    vm[13] = 0x0e;
-    vm[14] = 0x0f;
-    vm[15] = 0x10;
-
-    // test core VM logic -> maybe a better way to be DRY without repeating this code
-    for (int i = 0; i < MEM_SIZE; i++) {
-        unsigned char mnem = vm[i];
-        if (mnem == 0) continue; // skip empty cells
-        handle_cmd(mnem);
-    }
-}
 
 void test_initialization() {
     unsigned char *vm = initialize_vm();
     assert(vm != NULL);
-    test_handle_mnemonic(vm);
     free_vm(vm);
 }
 
@@ -44,10 +17,39 @@ void test_read_write() {
     free_vm(vm);
 }
 
+void test_live_instruction() {
+    vm_state_t vm;
+    vm.pc = 0; // Start at the beginning of memory
+    write_memory(vm.memory, 0, 0x01); // Write the opcode for 'live'
+    write_int_to_memory(vm.memory, 1, 1234); // Write the champion number (e.g., 1234)
+    unsigned char cmd = read_memory(vm.memory, vm.pc);
+    printf("%d\n", cmd);
+    handle_cmd(&vm, cmd);
+    // The PC should have advanced by 5 bytes, and you might check if the 'live' action was performed
+    assert(vm.pc == 5);
+    printf("Test for 'live' instruction passed.\n");
+}
+
+void test_ld_instruction() {
+    vm_state_t vm;
+    vm.pc = 0; // Reset or set the PC for this test
+    write_memory(vm.memory, 0, 0x02); // Write the opcode for 'ld'
+    write_int_to_memory(vm.memory, 1, 5678); // Write the value to be loaded
+    write_memory(vm.memory, 5, 1); // register 1
+    unsigned char cmd = read_memory(vm.memory, vm.pc);
+    printf("%d\n", cmd);
+    handle_cmd(&vm, cmd);
+    // Verify the value was loaded into the correct register and PC was updated
+    assert(vm.registers[0] == 5678); // registers 0-indexed?
+    assert(vm.pc == 6);
+    printf("Test for 'ld' instruction passed.\n");
+}
+
 int main() {
     test_initialization();
     test_read_write();
-    // more tests
+    test_live_instruction();
+    test_ld_instruction();
     printf("All tests passed successfully.\n");
     return 0;
 }

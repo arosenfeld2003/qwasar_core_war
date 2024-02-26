@@ -1,15 +1,9 @@
 #include "../../include/header.h"
+#include "../../include/vm_state.h"
 #include <fcntl.h> // open
 #include <unistd.h> // read, close
 #include <stdio.h> // perror, at least for MVP
 #include <stdlib.h> // malloc, free
-
-typedef struct vm_state {
-    int dump_cycle;       // Cycle number to dump memory (-1 if not used)
-    int next_champion_id; // Next champion ID to assign with -n
-    champion_t champions[MAX_CHAMPIONS]; // Array of champions
-    int champion_count;   // Number of loaded champions
-} vm_state_t;
 
 unsigned char *initialize_vm() {
     // allocate memory for the VM
@@ -37,26 +31,28 @@ void free_vm(unsigned char *vm) {
     printf("Memory allocation for VM freed.");
 }
 
-int handle_cmd(unsigned char cmd) {
+int handle_cmd(vm_state_t *vm_state, unsigned char cmd) {
     switch (cmd) {
-        case 0x01:
-            // (live)
-            // Takes 1 parameter:
-            // 4 bytes that represent the player's number.
-            // Indicates the player is alive.
-            printf("Mnemonic 0x01 executed\n");
+        case 0x01: { // live
+            // next 4 bytes represent the player's number
+            int player_number = read_direct_value(vm_state->memory, vm->pc + 1);
+            printf("Player %d is alive\n", player_number);
+            vm_state->pc += 5; // Move past the instruction and its parameter
+            printf("cmd LIVE executed\n");
             break;
-        case 0x02:
-            // (ld)
-            // Takes 2 parameters:
-            // loads the first parameter to the second parameter.
-            // Second parameter is a register.
-            // Ex: ld 34, r3
-            // loads the REG_SIZE bytes
-            // starting from the Counter + 34 % IDX_MOD
-            // into r3.
-            printf("Mnemonic 0x02 executed\n");
+        }
+        case 0x02: { // ld
+            // next bytes represent the value and the register number
+            int value = read_direct_value(vm_state->memory, vm->pc + 1); // Simplified
+            int reg_num = vm_state->memory[vm_state->pc + 5]; // Simplified
+            if (reg_num >= 1 && reg_num <= REG_NUMBER) {
+                vm_state->registers[reg_num - 1] = value;
+                printf("Loaded %d into r%d\n", value, reg_num);
+            }
+            vm_state->pc += 6; // Adjust based on actual parameter sizes
+            printf("cmd LD executed\n");
             break;
+        }
         case 0x03:
             // (st)
             // Takes 2 parameters:
@@ -166,7 +162,12 @@ void assign_program_numbers(champion_t champions[], int num_champions) {
     }
 }
 
-void load_programs_into_memory(unsigned char *memory, champion_t champions[], int num_champions) {
+void load_champion(const char* file_path, int id, int start_address) {
+    // Placeholder for the actual loading logic
+    printf("Loading Champion: %s, ID: %d, Start Address: %d\n", file_path, id, start_address);
+}
+
+void load_programs_into_memory(unsigned char *vm, champion_t champions[], int num_champions) {
     for (int i = 0; i < num_champions; ++i) {
         int fd = open(champions[i].file_path, O_RDONLY);
         if (fd == -1) {
@@ -193,12 +194,12 @@ void load_programs_into_memory(unsigned char *memory, champion_t champions[], in
 
         // Manually copy the program code into the VM's memory at the specified start address
         for (ssize_t j = 0; j < bytes_read; ++j) {
-            memory[champions[i].start_address + j] = champions[i].code[j];
+            vm[champions[i].start_address + j] = champions[i].code[j];
         }
 
         // Clean up
         close(fd);
-        // Optionally free the allocated code if it's no longer needed in memory
+        // Free the allocated code -> is it still needed??
         free(champions[i].code);
         champions[i].code = NULL; // Avoid dangling pointer
     }
