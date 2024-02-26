@@ -1,21 +1,27 @@
-#
-# Makefile for corewar
-#
+CC=gcc
+CFLAGS=-Wall -Wextra -Werror -g
 
-PROG = corewar
-OPTS = -Wall -Wextra -g #-Werror 
+OBJ = main.o vm.o asm.o helpers.o
 
-corewar: corewar.o op.o
-	cc $(OPTS) corewar.o op.o -o $(PROG)
+all: corewar
 
-corewar.o: corewar.c corewar.h
-	cc $(OPTS) -c $(PROG).c
+corewar: $(OBJ)
+	$(CC) $(CFLAGS) -o corewar $(OBJ)
 
-op.o: op.c op.h
-	cc $(OPTS) -c op.c
+main.o: main.c
+	$(CC) $(CFLAGS) -c main.c
+
+vm.o: vm/vm.c vm/vm_utils.c
+	$(CC) $(CFLAGS) -c vm/vm.c -o vm.o
+
+asm.o: asm/asm.c
+	$(CC) $(CFLAGS) -c asm/asm.c -o asm.o
+
+helpers.o: include/helpers.c
+	$(CC) $(CFLAGS) -c include/helpers.c -o helpers.o
+
+tests.o: tests/test_vm.c
+	$(CC) $(CFLAGS) -c tests/test_vm.c -o tests.o
 
 clean:
-	rm *.o
-
-fclean: clean
-	rm -f $(PROG) a.out
+	rm -f *.o corewar
