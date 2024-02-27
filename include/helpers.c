@@ -20,7 +20,7 @@ void parse_arguments(int argc, char** argv, vm_state_t *vm_state) {
         } else {
             // Check if there's room to store champion files
             if (vm_state->champion_count < MAX_CHAMPIONS) {
-                vm_state->champions[vm_state->champion_count++] = argv[i];
+                vm_state->champions[vm_state->champion_count++] = *argv[i];
             } else{
                 printf("Error: Too many champion files\n");
                 exit(1);

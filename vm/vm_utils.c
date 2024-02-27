@@ -25,10 +25,10 @@ void write_memory(unsigned char *vm, size_t address, unsigned char value) {
 
 
 /*
- *
+ * Helper function to write a 4-byte integer to VM memory
+ * Big Endian Format:
+ * https://developer.arm.com/documentation/ddi0333/h/programmer-s-model/memory-formats/legacy-big-endian-format
  * */
-// Helper function to write a 4-byte integer to VM memory
-// Big Endian Format: https://developer.arm.com/documentation/ddi0333/h/programmer-s-model/memory-formats/legacy-big-endian-format
 void write_int_to_memory(unsigned char *vm, size_t address, int value) {
     for (int i = 0; i < 4; ++i) {
         write_memory(vm, address + 3 - i, (value >> (i * 8)) & 0xFF);
@@ -77,7 +77,7 @@ void parse_arguments(int argc, char **argv, vm_state_t *vm_state) {
 // load a single .cor file
 // vm_state_t and champion_t are defined and include file_path
 
-void load_champion(unsigned char *vm, champion_t *champ) {
+void load_champion(vm_state_t vm, champion_t *champ, int champ_count) {
     FILE *file = fopen(champ->file_path, "rb"); // Open in binary mode
     if (!file) {
         perror("Failed to open champion file");
@@ -95,8 +95,8 @@ void load_champion(unsigned char *vm, champion_t *champ) {
     fread(champ->code, sizeof(unsigned char), champ->size, file);
     fclose(file);
 
-    // And you have a function to copy champion code into vm_memory at start_address
-    load_programs_into_memory(vm, champ);
+    // copy champion code into vm_memory at start_address
+    load_programs_into_memory(vm, champ, champ_count);
 }
 
 void load_programs_into_memory(unsigned char *vm, champion_t *champ) {
@@ -119,7 +119,7 @@ void load_programs_into_memory(unsigned char *vm, champion_t *champ) {
  * Fourth iteration: value = 0x01020300 | 0x04 = 0x01020304
  */
 
-int read_direct_value(unsigned char *memory, int start_pos) {
+int read_direct_value(const unsigned char *memory, int start_pos) {
     int value = 0;
     for (int i = 0; i < 4; ++i) { // 4-byte integers
         // read and accumulate each byte

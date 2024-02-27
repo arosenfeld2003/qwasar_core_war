@@ -16,22 +16,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05bf609e-11dc-4670-b1ca-80a234371b69" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/asm/asm.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asm/simple.warrior" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/champs/complex.s" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/champs/dwarf.s" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/champs/parse.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/champs/simple.s" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/champs/strategyMaster.s" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/core_war_explanation.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/include/header.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/include/op.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/include/vm_state.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_vm.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/vm_tests.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/vm/vm.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/vm/vm_utils.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/include/instructions.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/champs/parse.c" beforeDir="false" afterPath="$PROJECT_DIR$/champs/parse.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/header.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/header.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/helpers.c" beforeDir="false" afterPath="$PROJECT_DIR$/include/helpers.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_vm.c" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_vm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vm/vm.c" beforeDir="false" afterPath="$PROJECT_DIR$/vm/vm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vm/vm_utils.c" beforeDir="false" afterPath="$PROJECT_DIR$/vm/vm_utils.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,7 +139,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1708923146717</updated>
-      <workItem from="1708923147779" duration="3043000" />
+      <workItem from="1708923147779" duration="10699000" />
     </task>
     <servers />
   </component>

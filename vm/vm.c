@@ -1,8 +1,8 @@
-#include "header.h"
-#include "vm_state.h"
+#include "../include/header.h"
+#include "../include/vm_state.h"
 #include <fcntl.h> // open
 #include <unistd.h> // read, close
-#include <stdio.h> // perror, at least for MVP
+#include <stdio.h> // perror
 #include <stdlib.h> // malloc, free
 
 unsigned char *initialize_vm() {
@@ -152,6 +152,8 @@ int handle_cmd(vm_state_t *vm_state, unsigned char cmd) {
             // Ex; aff r3 -> outputs '*' if r3 contains 42.
             printf("Mnemonic 0x10b executed\n");
             break;
+        default:
+            printf("invalid command passed to vm");
     }
     return 0;
 }
@@ -167,7 +169,7 @@ void load_champion(const char* file_path, int id, int start_address) {
     printf("Loading Champion: %s, ID: %d, Start Address: %d\n", file_path, id, start_address);
 }
 
-void load_programs_into_memory(unsigned char *vm, champion_t champions[], int num_champions) {
+void load_programs_into_memory(vm_state_t vm, champion_t champions[], int num_champions) {
     for (int i = 0; i < num_champions; ++i) {
         int fd = open(champions[i].file_path, O_RDONLY);
         if (fd == -1) {
@@ -194,7 +196,9 @@ void load_programs_into_memory(unsigned char *vm, champion_t champions[], int nu
 
         // Manually copy the program code into the VM's memory at the specified start address
         for (ssize_t j = 0; j < bytes_read; ++j) {
-            vm[champions[i].start_address + j] = champions[i].code[j];
+            // handle circular memory (we need to use modulo here)
+            // replace with the load_champion function above
+            vm.memory[champions[i].start_address + j] = champions[i].code[j];
         }
 
         // Clean up
