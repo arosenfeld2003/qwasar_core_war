@@ -28,24 +28,28 @@ void test_live_instruction() {
     unsigned char cmd = read_memory(vm_state.memory, vm_state.pc);
     printf("%d\n", cmd);
     handle_cmd(&vm_state, cmd);
-    // The PC should have advanced by 5 bytes, and you might check if the 'live' action was performed
-    assert(vm.pc == 5);
+    // pc should have advanced by 5 bytes, and 'live' action was was called
+    assert(vm_state.pc == 5);
     printf("Test for 'live' instruction passed.\n");
+    free_vm(vm_state.memory);
 }
 
 void test_ld_instruction() {
-    vm_state_t vm;
-    vm.pc = 0; // Reset or set the PC for this test
-    write_memory(vm.memory, 0, 0x02); // Write the opcode for 'ld'
-    write_int_to_memory(vm.memory, 1, 5678); // Write the value to be loaded
-    write_memory(vm.memory, 5, 1); // register 1
-    unsigned char cmd = read_memory(vm.memory, vm.pc);
+    unsigned char *vm = initialize_vm();
+    vm_state_t vm_state;
+    vm_state.memory = vm;
+    vm_state.pc = 0; // Reset or set the PC for this test
+    write_memory(vm_state.memory, 0, 0x02); // Write the opcode for 'ld'
+    write_int_to_memory(vm_state.memory, 1, 5678); // Write the value to be loaded
+    write_memory(vm_state.memory, 5, 1); // register 1
+    unsigned char cmd = read_memory(vm_state.memory, vm_state.pc);
     printf("%d\n", cmd);
-    handle_cmd(&vm, cmd);
+    handle_cmd(&vm_state, cmd);
     // Verify the value was loaded into the correct register and PC was updated
-    assert(vm.registers[0] == 5678); // registers 0-indexed?
-    assert(vm.pc == 6);
+    assert(vm_state.registers[0] == 5678); // registers 0-indexed?
+    assert(vm_state.pc == 6);
     printf("Test for 'ld' instruction passed.\n");
+    free_vm(vm_state.memory);
 }
 
 int main() {

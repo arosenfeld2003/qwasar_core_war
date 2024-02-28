@@ -1,5 +1,4 @@
-#include "header.h"
-#include "vm_state.h"
+#include "../include/header.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -99,10 +98,11 @@ void load_champion(vm_state_t vm, champion_t *champ, int champ_count) {
     load_programs_into_memory(vm, champ, champ_count);
 }
 
-void load_programs_into_memory(unsigned char *vm, champion_t *champ) {
+// TODO: needs refactor
+void load_programs_into_memory(vm_state_t vm, champion_t *champ, int num_champions) {
     int pc = champ->start_address;
-    for (int i = 0; i < champ->size; ++i) {
-        vm[pc++] = champ->code[i];
+    for (int i = 0; i < champ_count; ++i) {
+        vm.pc++ = champ->code[i];
     }
 }
 

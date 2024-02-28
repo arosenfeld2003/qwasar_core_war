@@ -35,7 +35,7 @@ int handle_cmd(vm_state_t *vm_state, unsigned char cmd) {
     switch (cmd) {
         case 0x01: { // live
             // next 4 bytes represent the player's number
-            int player_number = read_direct_value(vm_state->memory, vm->pc + 1);
+            int player_number = read_direct_value(vm_state->memory, vm_state->pc + 1);
             printf("Player %d is alive\n", player_number);
             vm_state->pc += 5; // Move past the instruction and its parameter
             printf("cmd LIVE executed\n");
@@ -43,7 +43,7 @@ int handle_cmd(vm_state_t *vm_state, unsigned char cmd) {
         }
         case 0x02: { // ld
             // next bytes represent the value and the register number
-            int value = read_direct_value(vm_state->memory, vm->pc + 1); // Simplified
+            int value = read_direct_value(vm_state->memory, vm_state->pc + 1); // Simplified
             int reg_num = vm_state->memory[vm_state->pc + 5]; // Simplified
             if (reg_num >= 1 && reg_num <= REG_NUMBER) {
                 vm_state->registers[reg_num - 1] = value;

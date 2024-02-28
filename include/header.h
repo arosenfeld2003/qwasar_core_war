@@ -2,6 +2,8 @@
 #define HEADER_H
 
 #include <stdlib.h>
+#include <stdio.h> // printf
+#include <string.h> // strcmp
 // #include "vm_state.h"
 #include "op.h"
 
@@ -12,7 +14,7 @@ typedef struct vm_state {
     int champion_count;   // Number of loaded champions
     unsigned char *memory;
     int registers[REG_NUMBER];
-    int pc; // Program counter
+    int pc; // Program Counter
     int carry; // Carry flag
 } vm_state_t;
 
@@ -29,5 +31,7 @@ void load_programs_into_memory(vm_state_t vm, champion_t *champ, int num_champio
 void load_champion_code(vm_state_t *vm_state, champion_t *champ);
 int read_direct_value(const unsigned char *memory, int start_pos);
 int handle_cmd(vm_state_t *vm_state, unsigned char cmd);
+
+
 
 #endif /* HEADER_H */

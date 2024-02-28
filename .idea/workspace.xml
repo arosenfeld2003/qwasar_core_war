@@ -16,10 +16,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05bf609e-11dc-4670-b1ca-80a234371b69" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/include/instructions.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/champs/parse.c" beforeDir="false" afterPath="$PROJECT_DIR$/champs/parse.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/include/header.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/header.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/include/helpers.c" beforeDir="false" afterPath="$PROJECT_DIR$/include/helpers.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_vm.c" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_vm.c" afterDir="false" />
@@ -139,7 +137,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1708923146717</updated>
-      <workItem from="1708923147779" duration="10699000" />
+      <workItem from="1708923147779" duration="15357000" />
     </task>
     <servers />
   </component>
