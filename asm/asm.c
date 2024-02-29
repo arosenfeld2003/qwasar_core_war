@@ -124,64 +124,25 @@ int write_instruction(FILE *output_file, inst_t *inst)
     write(output_fd, &opcode, 1);
     write(output_fd, &ptype_byte, 1);
 
-    switch (opcode) {  // TODO refactor to functions
-        case OP_LIVE:
-            prog_num = my_atoi(inst->args[0]);
-            write(output_fd, &prog_num, DIR_SIZE);
-            break;
-        case OP_LD:
-            
+    for (int i = 0; i < inst->arg_count; i++) {
+        int arg;
 
-            if (inst->operands[1][0] == '%') {
-                param = my_atoi(inst->operands[0] + 1); /* skip % */
-                
-
-        case OP_ST:       // TODO ST is similar but needs r check on 1st param
-            // handle first param
-            if (inst->operands[0][0] == '%') {
-                param = atoi(inst->operands[0] + 1); /* bypass * % */
-                fwrite(&param, sizeof(param), 1, output_file);
-            }
-            else {
-                param = atoi(inst->operands[0]);    /* indirect value */
-                fwrite(&param, sizeof(param), 1, output_file);
-            }
-            // handle 2nd param
-            fwrite(&(inst->operands[1][1]), 1, 1, output_file);  /* skips 'r' */
-            break;
-        case OP_ADD:  // 3 registers
-            for (int i = 0; i < inst->operand_count; i++)
-                // TODO does atoi pad with 0's?
-                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
-        case OP_SUB:  // 3 registers
-            for (int i = 0; i < inst->operand_count; i++)
-                // TODO does atoi pad with 0's?
-                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
-        case OP_AND:  // 3 reisters
-            for (int i = 0; i < inst->operand_count; i++)
-                // TODO does atoi pad with 0's?
-                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
-        case OP_OR:  // 3 registers
-            for (int i = 0; i < inst->operand_count; i++)
-                // TODO does atoi pad with 0's?
-                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
-        case OP_XOR: // 3 registers
-                // TODO does atoi pad with 0's?
-                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
-
-        case OP_ZJMP:  // 1 index
-        case OP_LDI:
-        case OP_STI:
-        case OP_FORK:
-        case OP_LLD:
-        case OP_LLDI:
-        case OP_LFORK:
-        case OP_AFF:
-        default:
-            return;     
+        switch (inst->args[i][0]) {
+            case 'r':
+                arg = my_atoi(inst->args[i] + 1);   /* +1 for 'r' */
+                write(output_fd, &arg, REG_SIZE);
+                break;
+            case '%':
+                arg = my_atoi(inst->args[i] + 1);   /* +1 for '%' */
+                write(output_fd, &arg, DIR_SIZE);
+                break;
+            default:
+                arg = my_atoi(inst->args[i]);
+                write(output_fd, &arg, IND_SIZE);
+        }
     }
+    return 1;
 }
-
 
 int make_valid_ptype_byte(inst_t *inst, int opcode)
 {
