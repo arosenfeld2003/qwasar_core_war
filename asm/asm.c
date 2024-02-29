@@ -1,4 +1,5 @@
 //#include "op.h"
+#include "asm_utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> // for exit
@@ -10,9 +11,11 @@
 
 #define USAGE "usage: ./asm <program>"
 #define MAX_LINE_LENGTH 1024
-#define MAX_INST_LENGTH 3
 #define LDELIMS " \t\n"         /* label delims */
 #define OPDELIMS " \t\n,"       /* operand delims */
+#define BYTE 8                  /* byte size */
+#define REG_CHAR 'r'            /* TODO put in op.h? */
+#define TYPE_TABLE_INDEX 2      /* where type table is in op_tab */
 
 // TEMP OP codes; use op.h
 #define OP_LIVE 1
@@ -21,9 +24,9 @@
 
 typedef struct {
     char *label;
-    char *instruction;
-    char *operands[3];
-    int operand_count;
+    char *name;
+    char *args[3];
+    int arg_count;           /* operand count */
 } inst_t;
 
 void parse_program(FILE *input_file, FILE *output_file);
@@ -31,6 +34,7 @@ void parse_line(char *line, inst_t *inst);
 void output_inst(inst_t *inst);
 void write_instruction(FILE *output_file, inst_t *inst);
 int get_opcode(inst_t *inst);
+int validate_args(inst_t *inst, int opcode);
 
 int main(int argc, char **argv)
 {
@@ -97,16 +101,16 @@ void parse_line(char *line, inst_t *inst)
 
         // parse operands
         while ((token = strtok_r(NULL, OPDELIMS, &saveptr)) != NULL
-                && inst->operand_count < MAX_INST_LENGTH) {
+                && inst->operand_count < MAX_ARGS_NUMBER) {
             inst->operands[inst->operand_count++] = strdup(token);
         }
     }
     // TEST
-    //output_inst(inst);
-    //printf("*********\n");
+    output_inst(inst);
+    printf("*********\n");
 }
 
-void write_instruction(FILE *output_file, inst_t *inst)
+int write_instruction(FILE *output_file, inst_t *inst)
 {
     int opcode;  /* in base 10 despite encoded in hex */
     int param;              /* value of a parameter */
@@ -114,15 +118,28 @@ void write_instruction(FILE *output_file, inst_t *inst)
     // set opcode based on instruction
     opcode = get_opcode(inst);
 
+    // validate 
+    if (validate_args(inst, opcode) == 0)
+        return 0;
+
     // write to file?
-    fwrite(&opcode, sizeof(opcode), 1, output_file);
+    write(output_file, opcode, 1);
+    //fwrite(&opcode, sizeof(opcode), 1, output_file);
 
     switch (opcode) {  // TODO refactor to functions
         case OP_LIVE:
-            param = atoi(inst->operands[0] + 1); /* bypass % */
-            fwrite(&param, sizeof(param), 1, output_file);
+            param_byte = 0b01000000;
+            write(output_fd, &param_byte, 1);
+            prog_num = my_atoi(inst->operands[0]);
+            write(output_fd, &prog_num, 4);
             break;
         case OP_LD:
+            
+
+            if (inst->operands[1][0] == '%') {
+                param = my_atoi(inst->operands[0] + 1); /* skip % */
+                
+
         case OP_ST:       // TODO ST is similar but needs r check on 1st param
             // handle first param
             if (inst->operands[0][0] == '%') {
@@ -136,20 +153,68 @@ void write_instruction(FILE *output_file, inst_t *inst)
             // handle 2nd param
             fwrite(&(inst->operands[1][1]), 1, 1, output_file);  /* skips 'r' */
             break;
+        case OP_ADD:  // 3 registers
+            for (int i = 0; i < inst->operand_count; i++)
+                // TODO does atoi pad with 0's?
+                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
+        case OP_SUB:  // 3 registers
+            for (int i = 0; i < inst->operand_count; i++)
+                // TODO does atoi pad with 0's?
+                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
+        case OP_AND:  // 3 reisters
+            for (int i = 0; i < inst->operand_count; i++)
+                // TODO does atoi pad with 0's?
+                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
+        case OP_OR:  // 3 registers
+            for (int i = 0; i < inst->operand_count; i++)
+                // TODO does atoi pad with 0's?
+                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
+        case OP_XOR: // 3 registers
+                // TODO does atoi pad with 0's?
+                write(champ_fd, atoi(inst->operands[i][1]), DIR_SIZE); /* skips 'r' */
+
+        case OP_ZJMP:  // 1 index
+        case OP_LDI:
+        case OP_STI:
+        case OP_FORK:
+        case OP_LLD:
+        case OP_LLDI:
+        case OP_LFORK:
+        case OP_AFF:
         default:
             return;     
     }
 }
 
+int validate_args(inst_t *inst, int opcode)
+{
+    for (int i = 0; i < inst->arg_count; i++) {
+        char type = T_IND;  /* indirect is default */
+        char prefix = inst->args[i][0];
+
+        /* examine prefix for type */
+        if (prefix == REG_CHAR)
+            type = T_REG;
+        else if (prefix == DIRECT_CHAR)
+            type = T_DIR;
+
+        /* check if not valid */
+        if ((type & op_tab[opcode - 1][TYPE_TABLE_INDEX][i]) == 0)
+            return 0;
+    }
+    return 1;
+}
+
+/*
+ * return: index plus 1 for the opcode
+ */
 int get_opcode(inst_t *inst)
 {
-    if (strcmp(inst->instruction, "live") == 0)
-        return OP_LIVE;
-    if (strcmp(inst->instruction, "ld") == 0)
-        return OP_LD;
-    if (strcmp(inst->instruction, "st") == 0)
-        return OP_ST;
-    return -1;       // bad instruction
+    for (int i = 0; op_tab[i][0] != NULL; i++) {
+        if (my_strcmp(optab[i][0], inst->name) == 0)
+            return i + 1;
+    }
+    return -1; // bad instruction
 }
 
 void output_inst(inst_t *inst)

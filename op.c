@@ -1,6 +1,25 @@
 #include "corewar.h"
 
+/* from op.h
+enum parameter_types {
+    T_REG = 1,
+    T_DIR = 2,
+    T_IND = 4,
+    T_LAB = 8
+};
+
+struct op_s {
+    char *mnemonique;                       /* name of operation */
+    char nbr_args;                          /* number of args taken */
+    args_type_t type[MAX_ARGS_NUMBER];      /* args_type_t is a typedeffed char */
+    char code;
+    int nbr_cycles;
+    int (*inst)(champion_t *, core_t *, code_t, int *);
+};
+*/
+
 const op_t op_tab[] = {
+//mnemonique, nbr_args, args_type, inst num, nbr_cycles, func
     {"live", 1, {T_DIR}, 1, 10, inst_live},
     {"ld", 2, {T_DIR | T_IND, T_REG}, 2, 5, inst_ld},
     {"st", 2, {T_REG, T_IND | T_REG}, 3, 5, inst_st},
