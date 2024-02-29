@@ -1,4 +1,4 @@
-//#include "op.h"
+#include "../op.h"
 #include "asm_utils.h"
 #include <stdio.h>
 #include <string.h>
@@ -16,11 +16,9 @@
 #define BYTE 8                  /* byte size */
 #define REG_CHAR 'r'            /* TODO put in op.h? */
 #define TYPE_TABLE_INDEX 2      /* where type table is in op_tab */
-
-// TEMP OP codes; use op.h
-#define OP_LIVE 1
-#define OP_LD 2
-#define OP_ST 3
+#define REG_BIN 0b01
+#define DIR_BIN 0b10
+#define IND_BIN 0b11
 
 typedef struct {
     char *label;
@@ -34,7 +32,7 @@ void parse_line(char *line, inst_t *inst);
 void output_inst(inst_t *inst);
 void write_instruction(FILE *output_file, inst_t *inst);
 int get_opcode(inst_t *inst);
-int validate_args(inst_t *inst, int opcode);
+int make_valid_ptype_byte(inst_t *inst, int opcode);
 
 int main(int argc, char **argv)
 {
@@ -114,24 +112,22 @@ int write_instruction(FILE *output_file, inst_t *inst)
 {
     int opcode;  /* in base 10 despite encoded in hex */
     int param;              /* value of a parameter */
+    unsigned char ptype_byte = 0;     /* instruction byte */
 
     // set opcode based on instruction
     opcode = get_opcode(inst);
 
-    // validate 
-    if (validate_args(inst, opcode) == 0)
+    if ((ptype_byte = make_valid_ptype_byte(inst, opcode)) == 0)
         return 0;
 
-    // write to file?
-    write(output_file, opcode, 1);
-    //fwrite(&opcode, sizeof(opcode), 1, output_file);
+    /* write to file */
+    write(output_fd, &opcode, 1);
+    write(output_fd, &ptype_byte, 1);
 
     switch (opcode) {  // TODO refactor to functions
         case OP_LIVE:
-            param_byte = 0b01000000;
-            write(output_fd, &param_byte, 1);
-            prog_num = my_atoi(inst->operands[0]);
-            write(output_fd, &prog_num, 4);
+            prog_num = my_atoi(inst->args[0]);
+            write(output_fd, &prog_num, DIR_SIZE);
             break;
         case OP_LD:
             
@@ -186,23 +182,46 @@ int write_instruction(FILE *output_file, inst_t *inst)
     }
 }
 
-int validate_args(inst_t *inst, int opcode)
+
+int make_valid_ptype_byte(inst_t *inst, int opcode)
 {
+    unsigned char ptype_byte = 0;     /* instruction byte */
+
     for (int i = 0; i < inst->arg_count; i++) {
         char type = T_IND;  /* indirect is default */
         char prefix = inst->args[i][0];
+        int byte_pos = arg_num2byte_pos(i);
 
-        /* examine prefix for type */
-        if (prefix == REG_CHAR)
+        /* examine prefix for type and store in pbyte */
+        if (prefix == REG_CHAR) {
             type = T_REG;
-        else if (prefix == DIRECT_CHAR)
+            ptype_byte |= (REG_BIN << byte_pos);
+        }
+        else if (prefix == DIRECT_CHAR) {
             type = T_DIR;
+            ptype_byte |= (DIR_BIN << byte_pos);
+        }
+        else
+            ptype_byte |= (IND_BIN << byte_pos);
 
         /* check if not valid */
         if ((type & op_tab[opcode - 1][TYPE_TABLE_INDEX][i]) == 0)
             return 0;
     }
-    return 1;
+    return ptype_byte;
+}
+
+/*
+ * purpose: convert argument number to position in pbyte
+ *    note: could use formula y = -2x + 6 but switch is more intuitive
+ */
+int arg_num2byte_pos(int arg_num) {
+    switch (arg_num) {
+        case 0: return 6;
+        case 1: return 4;
+        case 2: return 2;
+        default: return 0;
+    }
 }
 
 /*
