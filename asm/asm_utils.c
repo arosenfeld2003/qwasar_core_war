@@ -1,4 +1,5 @@
 #include "asm_utils.h"
+#include <stdlib.h>
 
 /*
  * asm_utils.c
@@ -58,6 +59,12 @@ char *my_strcpy(char *dest, char *src)
 	return dest;
 }
 
+#if 0
+long long my_abs(long long num)
+{
+    return num < 0 ? num * -1 : num;
+}
+
 /*
  * note: remember to free the returned string
  */
@@ -91,4 +98,26 @@ char *my_itoa_base(long long num, int base) {
 
     str[i] = '\0';
     return reverse_string(str);
+}
+#endif
+
+char* my_strdup(char* str)
+{
+    char* new;
+	int length = 0;
+	int i = 0;
+
+	while (str[length] != '\0')
+		length++;
+    
+	new = malloc(sizeof(*str) * (length + 1));
+	if (!new) return NULL;
+
+	while (i < length)
+	{
+		new[i] = str[i];
+		i++;
+	}
+	new[i] = '\0';
+	return (new);
 }

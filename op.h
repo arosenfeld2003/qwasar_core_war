@@ -1,4 +1,5 @@
-#ifndef _OP_H_ #define _OP_H_
+#ifndef _OP_H_
+#define _OP_H_
 #define MEM_SIZE (6 * 1024)
 
 /*

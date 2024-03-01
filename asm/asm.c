@@ -1,9 +1,12 @@
 #include "../op.h"
 #include "asm_utils.h"
 #include "hash_table.h"
+#include "../corewar.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> // for exit
+#include <fcntl.h>
+#include <unistd.h>
 
 /*
  * asm.c
@@ -20,8 +23,6 @@
 #define REG_BIN 0b01
 #define DIR_BIN 0b10
 #define IND_BIN 0b11
-#define HEADER_NAME ".name"
-#define HEADER_COMMENT ".comment"
 
 typedef struct {
     char *label;
@@ -35,14 +36,18 @@ typedef struct {
     char *comment;
 } head_t;
 
-void parse_program(int input_fd, int output_fd, head_t *head_ptr);
-void parse_line(char *line, inst_t *inst);
+void parse_program(int input_fd, int output_fd);
+void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht_labels, head_t *head_ptr);
 void output_inst(inst_t *inst);
-void write_instruction(FILE *output_file, inst_t *inst);
+int write_instruction(int output_fd, inst_t *inst, htable **ht_labels);
 int get_opcode(inst_t *inst);
 int make_valid_ptype_byte(inst_t *inst, int opcode);
 int is_valid_label(char *label);
 int has_arg_types(char *inst_name);
+int arg_num2byte_pos(int arg_num);
+char *fd_gets(int fd, char* buf, size_t n);
+
+static char buffer[1024]; //temp
 
 int main(int argc, char **argv)
 {
@@ -52,35 +57,35 @@ int main(int argc, char **argv)
     }
 
     // open file
-    FILE *input_file = fopen(argv[1], "r");
-    if (input_file == NULL) {
-        perror("Error opening file");
+    int input_fd = open(argv[1], O_RDONLY);
+    if (input_fd == -1) {
+        perror("Error opening file");    // TODO remove
         return 1;
     }
-    
     // create output file
-    FILE *output_file = fopen("a.cor", "w"); // overwrites if file exists
-    if (output_file == NULL) {
-        perror("Error creating output file"); 
+    int output_fd = open("a.cor", O_WRONLY); // overwrites if file exists
+    if (output_fd == 0) {
+        perror("Error creating output file"); // TODO remove
         return 1;
     }
 
-    parse_program(input_file, output_file);
+    parse_program(input_fd, output_fd);
 
-    fclose(input_file);
-    fclose(output_file);
+    close(input_fd);
+    close(output_fd);
     // TODO free any mallocs
     return 0;
 }
 
-void parse_program(int input_fd, int output_fd, head_t *head_ptr)
+void parse_program(int input_fd, int output_fd)
 {
     char line[MAX_LINE_LENGTH];
     int offset = 0;                         /* for label byte offset */
     htable **ht_labels;                      /* table for labels */
     head_t header = {};
 
-    while (fgets(line, MAX_LINE_LENGTH, input_file)) { /* first pass */
+    //while (fgets(line, MAX_LINE_LENGTH, input_fd)) { /* first pass */
+    while (fd_gets(input_fd, buffer, sizeof(buffer))) {
         inst_t inst = {};
 
         parse_line(line, &inst, 1, &offset, ht_labels, &header);
@@ -88,18 +93,18 @@ void parse_program(int input_fd, int output_fd, head_t *head_ptr)
     }
 
     lseek(input_fd, 0, SEEK_SET);  /* reset to top of file */
-    write(output_fd, head_ptr->name, my_strlen(head_ptr->name));
-    write(output_fd, head_ptr->comment, my_strlen(head_ptr->comment));
+    write(output_fd, header.name, my_strlen(header.name));
+    write(output_fd, header.comment, my_strlen(header.comment));
 
-    while (fgets(line, MAX_LINE_LENGTH, input_file)) { /* second pass */
+    //while (fgets(line, MAX_LINE_LENGTH, input_fd)) { /* second pass */
+    while (fd_gets(input_fd, buffer, sizeof(buffer))) {
         inst_t inst = {};
 
         parse_line(line, &inst, 1, &offset, ht_labels, &header);
-        write_instruction(output_file, &inst, ht_labels);
+        write_instruction(output_fd, &inst, ht_labels);
         //free_inst() // TODO
     }
-    ht_free(ht_labels)
-    
+    ht_free(ht_labels);
 }
 
 void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht_labels, head_t *head_ptr)
@@ -111,14 +116,14 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht
     token = strtok_r(line, LDELIMS, &saveptr); // returns ptr to 1st token
 
     // parse .name/.comment
-    if (my_strcmp(token, HEADER_NAME) == 0) {
+    if (my_strcmp(token, NAME_CMD_STRING) == 0) {
         token = strtok_r(NULL, LDELIMS, &saveptr); // get next item
-        my_strdup(head_ptr->name, token);
+        my_strcpy(head_ptr->name, token);
         token = strtok_r(NULL, LDELIMS, &saveptr);
     }
-    else if (my_strcmp(token, HEADER_COMMENT) == 0) {
+    else if (my_strcmp(token, COMMENT_CMD_STRING) == 0) {
         token = strtok_r(NULL, LDELIMS, &saveptr);
-        my_strdup(head_ptr->comment, token);
+        my_strcpy(head_ptr->comment, token);
         token = strtok_r(NULL, LDELIMS, &saveptr);
     }
     
@@ -137,11 +142,11 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht
     if (token) {
         inst->name = strdup(token);  // store instruction to struct
         table_index = get_opcode(inst) - 1;
-        num_args = op_tab[table_index][1];
+        num_args = op_tab[table_index].nbr_args;
 
         // parse operands
         while ((token = strtok_r(NULL, OPDELIMS, &saveptr)) != NULL
-                && inst->operand_count < num_args) {
+                && inst->arg_count < num_args) {
             if (pass_num == 1) {
                 (*offset)++;    /* instruction byte */
                 if (has_arg_types(inst->name))
@@ -162,7 +167,7 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht
     printf("*********\n");
 }
 
-int write_instruction(FILE *output_file, inst_t *inst, htable **ht_labels)
+int write_instruction(int output_fd, inst_t *inst, htable **ht_labels)
 {
     int opcode;  /* in base 10 despite encoded in hex */
     int param;              /* value of a parameter */
@@ -187,7 +192,7 @@ int write_instruction(FILE *output_file, inst_t *inst, htable **ht_labels)
                 arg = my_atoi(inst->args[i] + offset);   /* +1 for 'r' */
                 write(output_fd, &arg, REG_SIZE);
                 break;
-            case DIRECT_CHAR:
+            case DIRECT_CHAR: {
                 if (inst->args[i][1] && inst->args[i][1] == LABEL_CHAR) {
                     int index = ht_find_index(ht_labels, &inst->args[i][2]);
                     if (index == -1)
@@ -198,12 +203,15 @@ int write_instruction(FILE *output_file, inst_t *inst, htable **ht_labels)
                     arg = my_atoi(inst->args[i] + offset);   /* +1 for '%' */
                 write(output_fd, &arg, DIR_SIZE);
                 break;
-            case LABEL_CHAR:           /* indirect label */
-                int index = ht_find_index(ht_labels, inst->args[i][1]);
+            }
+            case LABEL_CHAR: {
+                int index = ht_find_index(ht_labels, &inst->args[i][1]);
                 if (index == -1)
                     exit(1);
                 arg = (*ht_labels)->list[index]->value;
                 write(output_fd, &arg, IND_SIZE);
+                break;
+            }
             default:
                 arg = my_atoi(inst->args[i]);
                 write(output_fd, &arg, IND_SIZE);
@@ -234,7 +242,7 @@ int make_valid_ptype_byte(inst_t *inst, int opcode)
             ptype_byte |= (IND_BIN << byte_pos);
 
         /* check if not valid */
-        if ((type & op_tab[opcode - 1][TYPE_TABLE_INDEX][i]) == 0)
+        if ((type & op_tab[opcode - 1].type[i]) == 0)
             return 0;
     }
     return ptype_byte;
@@ -258,8 +266,8 @@ int arg_num2byte_pos(int arg_num) {
  */
 int get_opcode(inst_t *inst)
 {
-    for (int i = 0; op_tab[i][0] != NULL; i++) {
-        if (my_strcmp(optab[i][0], inst->name) == 0)
+    for (int i = 0; op_tab[i].mnemonique != NULL; i++) {
+        if (my_strcmp(op_tab[i].mnemonique, inst->name) == 0)
             return i + 1;
     }
     return -1; // bad instruction
@@ -268,14 +276,14 @@ int get_opcode(inst_t *inst)
 void output_inst(inst_t *inst)
 {
     printf("Label: %s\n", inst->label);
-    printf("Instruction: %s\n", inst->instruction);
-    for (int i = 0; i < inst->operand_count; i++)
-        printf("Operand %d: %s\n", i, inst->operands[i]);
+    printf("Instruction: %s\n", inst->name);
+    for (int i = 0; i < inst->arg_count; i++)
+        printf("Operand %d: %s\n", i, inst->args[i]);
 }
 
 int is_valid_label(char *label)
 {
-    char *valid_str = LABEL_CHARS;
+    char *valid_chars = LABEL_CHARS;
     int valid_len = my_strlen(LABEL_CHARS); 
     int label_len = my_strlen(label); 
     int is_valid;
@@ -303,6 +311,29 @@ int has_arg_types(char *inst_name)
         my_strcmp(inst_name, "live") != 0 &&
         my_strcmp(inst_name, "zjmp") != 0 &&
         my_strcmp(inst_name, "fork") != 0 &&
-        my_strcmp(inst_name, "lfork") != 0 &&
+        my_strcmp(inst_name, "lfork") != 0
     );
+}
+
+char *fd_gets(int fd, char* buf, size_t n) {
+    if (n == 0 || buf == NULL) return NULL; // Invalid input
+
+    size_t i = 0;
+    while (i < n - 1) {
+        char c;
+        ssize_t read_size = read(fd, &c, 1);
+
+        if (read_size == 0) { // End of file
+            if (i == 0) return NULL; // No data read
+            break;
+        } else if (read_size < 0) { // Error
+            return NULL;
+        }
+
+        buf[i++] = c;
+        if (c == '\n') break; // Newline is read, stop
+    }
+
+    buf[i] = '\0'; // Null-terminate the string
+    return buf;
 }

@@ -1,5 +1,6 @@
 #include "corewar.h"
 
+#if 0
 /* from op.h
 enum parameter_types {
     T_REG = 1,
@@ -17,6 +18,56 @@ struct op_s {
     int (*inst)(champion_t *, core_t *, code_t, int *);
 };
 */
+#endif
+
+int inst_live(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0; // Placeholder return value
+}
+int inst_ld(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_st(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_add(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_sub(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_and(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_or(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_xor(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_zjmp(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_ldi(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_sti(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_fork(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_lld(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_lldi(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_lfork(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
+int inst_aff(champion_t *champion, core_t *core, code_t code, int *args) {
+    return 0;
+}
 
 const op_t op_tab[] = {
 //mnemonique, nbr_args, args_type, inst num, nbr_cycles, func
