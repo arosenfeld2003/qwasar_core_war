@@ -1,5 +1,6 @@
 #include "../op.h"
 #include "asm_utils.h"
+#include "hash_table.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> // for exit
@@ -69,13 +70,13 @@ int main(int argc, char **argv)
 void parse_program(FILE *input_file, FILE *output_file)
 {
     char line[MAX_LINE_LENGTH];
-    int offset = 0;     /* for label byte offset */
+    int offset = 0;                         /* for label byte offset */
+    htable **ht_labels;                      /* table for labels */
 
     while (fgets(line, MAX_LINE_LENGTH, input_file)) { /* first pass */
         inst_t inst = {};
 
-        parse_line(line, &inst, 1, &offset);
-        write_instruction(output_file, &inst);
+        parse_line(line, &inst, 1, &offset, ht_labels);
         //free_inst() // TODO
     }
 
@@ -84,16 +85,15 @@ void parse_program(FILE *input_file, FILE *output_file)
     while (fgets(line, MAX_LINE_LENGTH, input_file)) { /* second pass */
         inst_t inst = {};
 
-        // TEST
-        //printf("Line from file: %s", line); // no \n bc line has it
-
-        parse_line(line, &inst, 1, &offset);
-        write_instruction(output_file, &inst);
+        parse_line(line, &inst, 1, &offset, ht_labels);
+        write_instruction(output_file, &inst, ht_labels);
         //free_inst() // TODO
     }
+    ht_free(ht_labels)
+    
 }
 
-void parse_line(char *line, inst_t *inst, int pass_num, int *offset)
+void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht_labels)
 {
     char *token;
     int table_index, num_args;
@@ -110,7 +110,7 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset)
         if (pass_num == 1) {
             if (!is_valid_label(token))
                 exit(2);
-            add_label(hash, table); // TODO store in hash table
+            ht_add(ht_labels, token, *offset);
         }
         token = strtok_r(NULL, LDELIMS, &saveptr); // pass NULL to continue line
     }
@@ -143,7 +143,7 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset)
     printf("*********\n");
 }
 
-int write_instruction(FILE *output_file, inst_t *inst)
+int write_instruction(FILE *output_file, inst_t *inst, htable **ht_labels)
 {
     int opcode;  /* in base 10 despite encoded in hex */
     int param;              /* value of a parameter */
@@ -160,17 +160,30 @@ int write_instruction(FILE *output_file, inst_t *inst)
     write(output_fd, &ptype_byte, 1);
 
     for (int i = 0; i < inst->arg_count; i++) {
-        int arg;
+        int arg, offset = 1;
 
         switch (inst->args[i][0]) {
             case 'r':
-                arg = my_atoi(inst->args[i] + 1);   /* +1 for 'r' */
+                arg = my_atoi(inst->args[i] + offset);   /* +1 for 'r' */
                 write(output_fd, &arg, REG_SIZE);
                 break;
             case '%':
-                arg = my_atoi(inst->args[i] + 1);   /* +1 for '%' */
+                if (inst->args[i][1] && inst->args[i][1] == LABEL_CHAR) {
+                    int index = ht_find_index(ht_labels, &inst->args[i][2]);
+                    if (index == -1)
+                        exit(1);
+                    arg = (*ht_labels)->list[index]->value;
+                }
+                else
+                    arg = my_atoi(inst->args[i] + offset);   /* +1 for '%' */
                 write(output_fd, &arg, DIR_SIZE);
                 break;
+            case ':':           /* indirect label */
+                int index = ht_find_index(ht_labels, inst->args[i][1]);
+                if (index == -1)
+                    exit(1);
+                arg = (*ht_labels)->list[index]->value;
+                write(output_fd, &arg, IND_SIZE);
             default:
                 arg = my_atoi(inst->args[i]);
                 write(output_fd, &arg, IND_SIZE);

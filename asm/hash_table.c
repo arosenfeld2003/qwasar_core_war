@@ -49,6 +49,15 @@ int ht_add(htable **ht, char *key, int value)
     return 1;
 }
 
+int ht_find_index(htable **ht, char *key)
+{
+    for (int i = 0; i < (*ht)->cur_size; i++) {
+        if (my_strcmp((*ht)->list[i]->key, key) == 0)
+            return i;
+    }
+    return -1;      /* key not in table */
+}
+
 int ht_lookup(htable **ht, char *key)
 {
     for (int i = 0; i < (*ht)->cur_size; i++) {

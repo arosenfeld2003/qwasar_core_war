@@ -20,6 +20,7 @@ typedef struct htable_s {
 
 int ht_create(htable **ht, int capacity);
 int ht_add(htable **ht, char *key, int value);
+int ht_find_index(htable **ht, char *key);
 int ht_lookup(htable **ht, char *key);
 void ht_free(htable **ht);
 
