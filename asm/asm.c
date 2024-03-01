@@ -33,6 +33,7 @@ void output_inst(inst_t *inst);
 void write_instruction(FILE *output_file, inst_t *inst);
 int get_opcode(inst_t *inst);
 int make_valid_ptype_byte(inst_t *inst, int opcode);
+int is_valid_label(char *label);
 
 int main(int argc, char **argv)
 {
@@ -68,40 +69,74 @@ int main(int argc, char **argv)
 void parse_program(FILE *input_file, FILE *output_file)
 {
     char line[MAX_LINE_LENGTH];
+    int offset = 0;     /* for label byte offset */
 
-    while (fgets(line, MAX_LINE_LENGTH, input_file)) {
+    while (fgets(line, MAX_LINE_LENGTH, input_file)) { /* first pass */
+        inst_t inst = {};
+
+        parse_line(line, &inst, 1, &offset);
+        write_instruction(output_file, &inst);
+        //free_inst() // TODO
+    }
+
+    lseek(input_fd, 0, SEEK_SET);  /* reset to top of file */
+
+    while (fgets(line, MAX_LINE_LENGTH, input_file)) { /* second pass */
         inst_t inst = {};
 
         // TEST
         //printf("Line from file: %s", line); // no \n bc line has it
 
-        parse_line(line, &inst);
+        parse_line(line, &inst, 1, &offset);
         write_instruction(output_file, &inst);
         //free_inst() // TODO
     }
 }
 
-void parse_line(char *line, inst_t *inst)
+void parse_line(char *line, inst_t *inst, int pass_num, int *offset)
 {
     char *token;
+    int table_index, num_args;
     char *saveptr;  // required by strtok_r to use internally
 
     // TODO parse .name/.comment
 
     token = strtok_r(line, LDELIMS, &saveptr); // returns ptr to 1st token
+
+    
+    // check for label
     if (token && token[strlen(token) - 1] == ':') { // label found
-        inst->label = strdup(token);  // store label name
+        //inst->label = strdup(token);  // store label name
+        if (pass_num == 1) {
+            if (!is_valid_label(token))
+                exit(2);
+            add_label(hash, table); // TODO store in hash table
+        }
         token = strtok_r(NULL, LDELIMS, &saveptr); // pass NULL to continue line
     }
 
     if (token) {
-        inst->instruction = strdup(token);  // store instruction to struct
+        inst->name = strdup(token);  // store instruction to struct
+        table_index = get_opcode(inst) - 1;
+        num_args = op_tab[table_index][1];
 
         // parse operands
         while ((token = strtok_r(NULL, OPDELIMS, &saveptr)) != NULL
-                && inst->operand_count < MAX_ARGS_NUMBER) {
-            inst->operands[inst->operand_count++] = strdup(token);
+                && inst->operand_count < num_args) {
+            if (pass_num == 1) {
+                (*offset)++;    /* instruction byte */
+                if (has_arg_types(inst->name)) {  // TODO make function
+                    switch (inst->args[inst->arg_count][0]) {
+                        case 'r': *offset += REG_SIZE; break;
+                        case '%': *offset += DIR_SIZE; break;
+                        default:  *offset += IND_SIZE;
+                    }
+                }
+            }
+            else if (pass_num == 2)
+                inst->args[inst->arg_count] = strdup(token);
         }
+        inst->arg_count++;
     }
     // TEST
     output_inst(inst);
@@ -203,4 +238,25 @@ void output_inst(inst_t *inst)
     printf("Instruction: %s\n", inst->instruction);
     for (int i = 0; i < inst->operand_count; i++)
         printf("Operand %d: %s\n", i, inst->operands[i]);
+}
+
+int is_valid_label(char *label)
+{
+    char *valid_str = LABEL_CHARS;
+    int valid_len = my_strlen(LABEL_CHARS); 
+    int label_len = my_strlen(label); 
+    int is_valid;
+
+    for (int i = 0; i < label_len-1; i++) {
+        is_valid = 0;
+        for (int j = 0; i < valid_len; j++) {
+            if (label[i] == valid_chars[j]) {
+                is_valid = 1;
+                break;
+            }
+        }
+        if (is_valid == 0)
+            return 0;
+    }
+    return 1;
 }
