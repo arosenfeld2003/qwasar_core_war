@@ -28,6 +28,26 @@ void parse_arguments(int argc, char** argv, assembler_state_t *asm_state) {
             printf("Error: Too many champion files\n");
             exit(1);
         }
-        }
     }
+}
+
+void process_champions(assembler_state_t *asm_state) {
+    // process each champion file
+    for (int i = 0; i < asm_state->champion_count; i++) {
+        printf("Processing champion file: %s\n", asm_state->champions[i]);
+        // Add in the logic to convert to binary
+    }
+}
+
+int main(int argc, char** argv) {
+    // Check if at least one filename is provided
+    if (argc < 2) {
+        printf("Usage: ./asm file_name[.s]");
+        return 1;
+    }
+
+    assembler_state_t asm_state;
+    parse_arguments(argc, argv, &asm_state);
+    process_champions(&asm_state);
+    return 0;
 }
