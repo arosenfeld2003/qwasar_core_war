@@ -125,12 +125,12 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset)
                 && inst->operand_count < num_args) {
             if (pass_num == 1) {
                 (*offset)++;    /* instruction byte */
-                if (has_arg_types(inst->name)) {  // TODO make function
-                    switch (inst->args[inst->arg_count][0]) {
-                        case 'r': *offset += REG_SIZE; break;
-                        case '%': *offset += DIR_SIZE; break;
-                        default:  *offset += IND_SIZE;
-                    }
+                if (has_arg_types(inst->name))   // TODO make function
+                    (*offset)++;            /* ptype byte */
+                switch (inst->args[inst->arg_count][0]) {
+                    case 'r': *offset += REG_SIZE; break;
+                    case '%': *offset += DIR_SIZE; break;
+                    default:  *offset += IND_SIZE;
                 }
             }
             else if (pass_num == 2)

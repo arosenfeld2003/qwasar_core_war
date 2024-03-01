@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# hex2bin <hex>
+#   purpose: convert hex to binary
+
+if [ -z "$1" ]
+then
+    echo "usage: hex2bin <hex>"
+    exit 2
+fi
+
+HEX=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+echo "obase=2; ibase=16; $HEX" | bc
