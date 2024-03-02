@@ -69,11 +69,13 @@ int ht_lookup(htable **ht, char *key)
 
 void ht_free(htable **ht)
 {
-    for (int i = 0; i < (*ht)->cur_size; i++) {
-        free((*ht)->list[i]->key);      /* free key */
-        //free((*ht)->list[i]->value);  /* free value */
-        free((*ht)->list[i]);           /* free item */
+    if (ht) {
+        for (int i = 0; i < (*ht)->cur_size; i++) {
+            free((*ht)->list[i]->key);      /* free key */
+            //free((*ht)->list[i]->value);  /* free value */
+            free((*ht)->list[i]);           /* free item */
+        }
+        free((*ht)->list);                  /* free list */
+        free(*ht);                          /* free htable */
     }
-    free((*ht)->list);                  /* free list */
-    free(*ht);                          /* free htable */
 }

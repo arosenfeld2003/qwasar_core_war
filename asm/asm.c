@@ -47,7 +47,7 @@ int has_arg_types(char *inst_name);
 int arg_num2byte_pos(int arg_num);
 char *fd_gets(int fd, char* buf, size_t n);
 
-static char buffer[1024]; //temp
+static char line[1024]; //temp
 
 int main(int argc, char **argv)
 {
@@ -81,30 +81,35 @@ void parse_program(int input_fd, int output_fd)
 {
     char line[MAX_LINE_LENGTH];
     int offset = 0;                         /* for label byte offset */
-    htable **ht_labels;                      /* table for labels */
     head_t header = {};
 
+    htable *ht_labels;                      /* table for labels */
+    ht_create(&ht_labels, 0);                 /* create label hash table */
+
     //while (fgets(line, MAX_LINE_LENGTH, input_fd)) { /* first pass */
-    while (fd_gets(input_fd, buffer, sizeof(buffer))) {
+    while (fd_gets(input_fd, line, sizeof(line))) {
         inst_t inst = {};
 
-        parse_line(line, &inst, 1, &offset, ht_labels, &header);
+        parse_line(line, &inst, 1, &offset, &ht_labels, &header);
         //free_inst() // TODO
     }
 
     lseek(input_fd, 0, SEEK_SET);  /* reset to top of file */
     write(output_fd, header.name, my_strlen(header.name));
+    printf("DEBUG: header name: %s\n", header.name);
     write(output_fd, header.comment, my_strlen(header.comment));
+    printf("DEBUG: header comment: %s\n", header.comment);
 
     //while (fgets(line, MAX_LINE_LENGTH, input_fd)) { /* second pass */
-    while (fd_gets(input_fd, buffer, sizeof(buffer))) {
+    while (fd_gets(input_fd, line, sizeof(line))) {
         inst_t inst = {};
 
-        parse_line(line, &inst, 1, &offset, ht_labels, &header);
-        write_instruction(output_fd, &inst, ht_labels);
+        parse_line(line, &inst, 2, &offset, &ht_labels, &header);
+        if (inst.name)
+            write_instruction(output_fd, &inst, &ht_labels);
         //free_inst() // TODO
     }
-    ht_free(ht_labels);
+    ht_free(&ht_labels);
 }
 
 void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht_labels, head_t *head_ptr)
@@ -116,31 +121,33 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht
     token = strtok_r(line, LDELIMS, &saveptr); // returns ptr to 1st token
 
     // parse .name/.comment
-    if (my_strcmp(token, NAME_CMD_STRING) == 0) {
-        token = strtok_r(NULL, LDELIMS, &saveptr); // get next item
-        my_strcpy(head_ptr->name, token);
+    if (token && my_strcmp(token, NAME_CMD_STRING) == 0) {
+        token = strtok_r(NULL, "\n", &saveptr); // get next item
+        head_ptr->name = my_strdup(token);
         token = strtok_r(NULL, LDELIMS, &saveptr);
     }
-    else if (my_strcmp(token, COMMENT_CMD_STRING) == 0) {
-        token = strtok_r(NULL, LDELIMS, &saveptr);
-        my_strcpy(head_ptr->comment, token);
+    else if (token && my_strcmp(token, COMMENT_CMD_STRING) == 0) {
+        token = strtok_r(NULL, "\n", &saveptr);
+        head_ptr->comment = my_strdup(token);
         token = strtok_r(NULL, LDELIMS, &saveptr);
     }
     
     // check for label
-    if (token && token[strlen(token) - 1] == LABEL_CHAR) {
+    int tok_len = my_strlen(token);
+    if (token && token[tok_len - 1] == LABEL_CHAR) {
+        token[tok_len - 1] = '\0';          /* eliminate ':' */
         if (pass_num == 1) {
             if (!is_valid_label(token))
                 exit(2);
             ht_add(ht_labels, token, *offset);
         }
         else
-            inst->label = strdup(token);  // store label name
+            inst->label = my_strdup(token);  // store label name
         token = strtok_r(NULL, LDELIMS, &saveptr); // pass NULL to continue line
     }
 
     if (token) {
-        inst->name = strdup(token);  // store instruction to struct
+        inst->name = my_strdup(token);  // store instruction to struct
         table_index = get_opcode(inst) - 1;
         num_args = op_tab[table_index].nbr_args;
 
@@ -151,6 +158,7 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht
                 (*offset)++;    /* instruction byte */
                 if (has_arg_types(inst->name))
                     (*offset)++;            /* ptype byte */
+                inst->args[inst->arg_count] = my_strdup(token);
                 switch (inst->args[inst->arg_count][0]) {
                     case REG_CHAR: *offset += REG_SIZE; break;
                     case DIRECT_CHAR: *offset += DIR_SIZE; break;
@@ -158,13 +166,15 @@ void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht
                 }
             }
             else if (pass_num == 2)
-                inst->args[inst->arg_count] = strdup(token);
+                inst->args[inst->arg_count] = my_strdup(token);
+            inst->arg_count++;
         }
-        inst->arg_count++;
     }
     // TEST
-    output_inst(inst);
-    printf("*********\n");
+    if (pass_num == 2) {
+        output_inst(inst);
+        printf("*********\n");
+    }
 }
 
 int write_instruction(int output_fd, inst_t *inst, htable **ht_labels)
@@ -198,6 +208,7 @@ int write_instruction(int output_fd, inst_t *inst, htable **ht_labels)
                     if (index == -1)
                         exit(1);
                     arg = (*ht_labels)->list[index]->value;
+                    printf("DEBUG: label: %s; offset: %d\n", &inst->args[i][2], arg);
                 }
                 else
                     arg = my_atoi(inst->args[i] + offset);   /* +1 for '%' */
@@ -210,6 +221,7 @@ int write_instruction(int output_fd, inst_t *inst, htable **ht_labels)
                     exit(1);
                 arg = (*ht_labels)->list[index]->value;
                 write(output_fd, &arg, IND_SIZE);
+                printf("DEBUG: label: %s; offset: %d\n", &inst->args[i][1], arg);
                 break;
             }
             default:
