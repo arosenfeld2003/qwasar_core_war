@@ -63,7 +63,8 @@ int main(int argc, char **argv)
         return 1;
     }
     // create output file
-    int output_fd = open("a.cor", O_WRONLY); // overwrites if file exists
+    int output_fd = open("a.cor", O_WRONLY | O_CREAT | O_TRUNC,
+            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH); // overwrites if file exists
     if (output_fd == 0) {
         perror("Error creating output file"); // TODO remove
         return 1;
