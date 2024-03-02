@@ -10,6 +10,10 @@ all: corewar
 corewar: $(OBJ)
 	$(CC) $(CFLAGS) -o corewar $(OBJ)
 
+# rule for the test executable
+test: $(TEST_OBJ)
+	$(CC) $(CFLAGS) -o test $(TEST_OBJ)
+
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c
 
@@ -31,9 +35,5 @@ instructions.o: include/instructions.c
 tests.o: tests/test_vm.c
 	$(CC) $(CFLAGS) -c tests/test_vm.c -o tests.o
 
-# rule for the test executable
-tests: $(TEST_OBJ)
-	$(CC) $(CFLAGS) -o tests $(TEST_OBJ)
-
 clean:
-	rm -f *.o corewar tests
+	rm -f *.o corewar test

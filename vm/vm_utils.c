@@ -99,7 +99,7 @@ void load_champion(vm_state_t vm, champion_t *champ, int champ_count) {
 }
 
 // TODO: needs refactor
-void load_programs_into_memory(vm_state_t vm, champion_t *champ, int num_champions) {
+void load_programs_into_memory(vm_state_t vm, champion_t *champ, int champ_count) {
     int pc = champ->start_address;
     for (int i = 0; i < champ_count; ++i) {
         vm.pc++ = champ->code[i];
