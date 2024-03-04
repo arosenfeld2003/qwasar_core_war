@@ -54,3 +54,31 @@ The machine recognizes the mnemonic and effects.
 0x0e (lldi)||Same as ldi without the %IDX_MOD. Modifies the carry|
 0x0f (lfork)||Same as fork without the %IDX_MOD.|
 0x10 (aff)||Takes 1 parameter, a register. Displays to stdout the character corresponding to the ASCII code of the content of the register (in base 10). A 256 modulo is applied to this ASCII code.<br>Ex; aff r3 -> outputs '*' if r3 contains 42.|
+|| |
+<br>
+
+### Assembler Solution
+The assember set's the rules and syntax for writing the programs; we used GAC (Genearl Assembly Code). The instructions consist of:
+1. Label: The label is optional; it's follwed by the LABEL_CHAR (":") declared in op.h. The label can have any elements from the LABEL_CHARS string (also in op.h)
+2. Opcode: An instruction code, defined in the op_tab array in op.c
+3. Parameters: Instructions can have 0 to MAX_ARGS_NUMBER parameters, separated by a comma. There are three types available:
+   1. Register: From r1 to rREG_NUMBER
+   2. Direct: The DIREC_CHAR character, followed by a value or a label (preceded by LABEL_CHAR), which represents the direct value. (e.g %4 or %:label)
+   3. Indirect: A value or a lable (preceded by LABEL_CHAR) which represents the value that is found at the parameter's address in relation to the Counter. (ld 4, r5 loads the REG_SIZE bytes found at the Counter+4 address into r5.)
+
+The assembler takes the instruction (warrior) file in assembly code as a parmeter and produces the binary executable code for the VM.
+
+### Coding the Warriors
+Each instruction is composed of three elements:
+1. Instruction code
+2. Description of parameter types
+3. Parameters: 
+   1. 1 byte for register (in hexadecimal)
+   2. DIR_SIZE bytes for direct (in hex)
+   3. IND_SIZE bytes for indirect (in hex)
+
+
+## Running the Game
+Compile: gcc -o main main.c
+
+Run: ./main.c warrior1.s warrior2.s
