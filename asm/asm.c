@@ -68,6 +68,11 @@ void parse_program(FILE *input_file, FILE *output_file)
     char line[MAX_LINE_LENGTH];
 
     while (fgets(line, MAX_LINE_LENGTH, input_file)) {
+        // Skip lines starting with #
+        if (line[0] == '#') {
+                continue;
+        }
+
         inst_t inst = {};
 
         // TEST
