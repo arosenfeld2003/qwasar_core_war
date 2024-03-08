@@ -103,6 +103,10 @@ void parse_program(int input_fd, int output_fd)
 
     //while (fgets(line, MAX_LINE_LENGTH, input_fd)) { /* second pass */
     while (fd_gets(input_fd, line, sizeof(line))) {
+        // Skip lines starting with #
+        if (line[0] == '#') {
+            continue;
+        }
         inst_t inst = {};
 
         parse_line(line, &inst, 2, &offset, &ht_labels, &header);
