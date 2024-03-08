@@ -92,7 +92,7 @@ void parse_program(int input_fd, int output_fd)
         inst_t inst = {};
 
         parse_line(line, &inst, 1, &offset, &ht_labels, &header);
-        //free_inst() // TODO
+        free_inst(&inst);
     }
 
     lseek(input_fd, 0, SEEK_SET);  /* reset to top of file */
@@ -112,9 +112,10 @@ void parse_program(int input_fd, int output_fd)
         parse_line(line, &inst, 2, &offset, &ht_labels, &header);
         if (inst.name)
             write_instruction(output_fd, &inst, &ht_labels);
-        //free_inst() // TODO
+        free_inst(&inst);
     }
     ht_free(&ht_labels);
+    
 }
 
 void parse_line(char *line, inst_t *inst, int pass_num, int *offset, htable **ht_labels, head_t *head_ptr)
@@ -235,6 +236,14 @@ int write_instruction(int output_fd, inst_t *inst, htable **ht_labels)
         }
     }
     return 1;
+}
+
+void free_inst(inst_t *inst) {
+    free(inst->label);
+    free(inst->name);
+    for (int i = 0; i < inst->arg_count; i++) {
+        free (inst->args[i]);
+    }
 }
 
 int make_valid_ptype_byte(inst_t *inst, int opcode)
