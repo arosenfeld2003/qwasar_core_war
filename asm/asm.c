@@ -22,7 +22,7 @@
 typedef struct {
     char *label;
     char *instruction;
-    char *operands[3];
+    char *operands[MAX_INST_LENGTH]; // Changed from 3
     int operand_count;
 } inst_t;
 
