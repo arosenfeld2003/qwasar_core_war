@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -Werror -g
 
-OBJ = main.o vm.o vm_utils.o asm.o helpers.o instructions.o
-TEST_OBJ = tests.o vm.o vm_utils.o helpers.o  instructions.o # tests use vm and helpers
+OBJ = main.o op.o vm.o vm_utils.o asm.o helpers.o instructions.o
+TEST_OBJ = tests.o vm.o op.o vm_utils.o helpers.o  instructions.o # tests use vm and helpers
 
 
 all: corewar
@@ -16,6 +16,9 @@ test: $(TEST_OBJ) vm.o vm_utils.o helpers.o  instructions.o
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c
+
+op.o: op.c
+	gcc -c op.c
 
 vm.o: vm/vm.c vm/vm_utils.c
 	$(CC) $(CFLAGS) -c vm/vm.c -o vm.o

@@ -12,8 +12,9 @@ void test_read_write() {
     unsigned char *vm = initialize_vm();
     vm_state_t vm_state;
     vm_state.memory = vm;
+    champion_t champion = vm_state.champions[0];
     write_memory(&vm_state, 10, 0xAA); // Write a byte
-    assert((read_memory(&vm_state, vm_state.champions[0].state.pc) == 0xAA)); // Read the same byte and check
+    assert((read_memory(&vm_state, champion.state.pc) == 0xAA)); // Read the same byte and check
     printf("VM read/write have executed successfully.");
     free_vm(vm);
 }
@@ -23,9 +24,10 @@ void test_live_instruction() {
     vm_state_t vm_state;
     vm_state.memory = vm;
     vm_state.cycle_count = 0; // initialize cycle count to 0
-    vm_state.champions[0].state.pc = 0; // Initialize champion state counter at 0
-    write_memory(&vm_state, 0, 0x01); // Write the opcode for 'live'
-    write_int_to_memory(vm_state.memory, 1, 1234); // Write the champion number (e.g., 1234)
+    champion_t champion = vm_state.champions[0];
+    champion.state.pc = 0; // Initialize champion state counter at 0
+    write_memory(&vm_state,0, 0x01); // Write the opcode for 'live'
+    write_int_to_memory(&vm_state, 1, 1234); // Write the champion number (e.g., 1234)
     unsigned char cmd = read_memory(&vm_state, vm_state.cycle_count);
     printf("%d\n", cmd);
     handle_cmd(&vm_state, cmd);
@@ -41,11 +43,11 @@ void test_ld_instruction() {
     vm_state_t vm_state;
     vm_state.memory = vm;
     vm_state.cycle_count = 0; // start with cycle_count reset to 0
-    vm_state.champions[0].state.pc = 0; // Initialize champion state counter at 0
+    champion_t champion = vm_state.champions[0];
+    champion.state.pc = 0; // Initialize champion state counter at 0
     write_memory(&vm_state, 0, 0x02); // Write the opcode for 'ld'
-    write_int_to_memory(vm_state.memory, 1, 5678); // Write the value to be loaded
-    write_memory(&vm_state, 5, 1); // register 1
-    unsigned char cmd = read_memory(&vm_state, vm_state.champions[0].state.pc);
+    write_int_to_memory(&vm_state, 1, 5678); // Write the value to be loaded    write_memory(&vm_state, 5, 1); // register 1
+    unsigned char cmd = read_memory(&vm_state, champion.state.pc);
     printf("%d\n", cmd);
     handle_cmd(&vm_state, cmd);
     // Assertions with champion state

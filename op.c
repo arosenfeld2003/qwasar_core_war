@@ -1,4 +1,5 @@
-#include "corewar.h"
+#include "include/header.h"
+#include "include/instructions.h"
 
 const op_t op_tab[] = {
     {"live", 1, {T_DIR}, 1, 10, inst_live},

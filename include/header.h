@@ -21,8 +21,13 @@ typedef struct vm_state {
 // VM functions
 unsigned char *initialize_vm();
 void free_vm(unsigned char *vm);
-unsigned char read_memory(vm_state_t *vm_state, size_t address);
-void write_memory(vm_state_t *vm_state, size_t address, unsigned char value);
+int read_memory(vm_state_t *vm_state, int address);
+int get_arg_value(vm_state_t *vm_state, int index);
+void update_carry_flag(champion_t *champion, int value);
+void write_memory(vm_state_t *vm_state, int address, int value);
+int read_register(champion_t *champion, int register_number);
+void write_register(champion_t *champion, int register_dest, int value);
+void create_new_program(vm_state_t *vm_state, champion_t *champion, int new_counter);
 void write_int_to_memory(vm_state_t *vm_state, size_t address, int value);
 void assign_program_numbers(champion_t champions[], int num_champions);
 void load_champion(vm_state_t *vm, champion_t *champ);

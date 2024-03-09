@@ -5,18 +5,22 @@
 #include <fcntl.h> // open
 
 // read one byte from VM memory
-unsigned char read_memory(vm_state_t *vm_state, size_t address) {
-    if (address >= MEM_SIZE) {
-        fprintf(stderr, "Read Memory Error: Address %zu out of bounds\n", address);
-        exit(EXIT_FAILURE);
+int read_memory(vm_state_t *vm_state, int address) {
+    if (address >= 0 && address < MEM_SIZE) {
+        return vm_state->memory[address];
+    } else {
+        printf("Error: Invalid memory read operation in 'read_memory'.\n");
+        return -1;
     }
-    return vm_state->memory[address];
 }
 
-
 // write a byte to VM memory
-void write_memory(vm_state_t *vm_state, size_t address, unsigned char value) {
-    vm_state->memory[address] = value;
+void write_memory(vm_state_t *vm_state, int address, int value) {
+    if (address >= 0 && address < MEM_SIZE) {
+        vm_state->memory[address] = value;
+    } else {
+        printf("Error: Invalid memory write operation.\n");
+    }
 }
 
 /*
@@ -30,11 +34,11 @@ void write_int_to_memory(vm_state_t *vm_state, size_t address, int value) {
     }
 }
 
-void write_register(int reg_num, int value, vm_state_t *vm) {
-    if (reg_num >= 1 && reg_num <= REG_NUMBER) {
-        vm->champions[vm->current_champion_index].state.registers[reg_num - 1] = value;
+void write_register(champion_t *champion, int register_dest, int value) {
+    if (register_dest >= 1 && register_dest <= REG_NUMBER) {
+        champion->state.registers[register_dest - 1] = value;
     } else {
-        printf("Error: Invalid register number in 'write_register'.\n");
+        printf("Error: Invalid register number.\n");
     }
 }
 
@@ -75,6 +79,21 @@ void parse_arguments(int argc, char **argv, vm_state_t *vm_state) {
             }
         }
     }
+}
+
+// Function to get the value at a specific index from the VM's memory
+int get_arg_value(vm_state_t *vm_state, int index) {
+    if (index >= 0 && index < MEM_SIZE) {
+        return vm_state->memory[index];
+    } else {
+        printf("Error: Invalid memory access in 'get_arg_value'.\n");
+        return -1;
+    }
+}
+
+// Function to update each program's carry flag based on the passed value
+void update_carry_flag(champion_t *champion, int value) {
+    champion->state.carry = (value == 0) ? 0 : 1;
 }
 
 // params: pointers to vm_state_t and the champion
@@ -147,3 +166,22 @@ int read_direct_value(const unsigned char *memory, int start_pos) {
     return value;
 }
 
+void create_new_program(vm_state_t *vm_state, champion_t *champion, int new_counter) {
+    if (vm_state->champion_count < MAX_CHAMPIONS) {
+        vm_state->champions[vm_state->champion_count] = *champion;
+        vm_state->champions[vm_state->champion_count].state.pc = new_counter;
+        vm_state->champion_count++;
+    } else {
+        printf("Error: Maximum number of champions reached.\n");
+    }
+}
+
+// Reads a value from a specified register for a given champion
+int read_register(champion_t *champion, int register_number) {
+    if (register_number >= 1 && register_number <= REG_NUMBER) {
+        return champion->state.registers[register_number - 1];
+    } else {
+        printf("Error: Invalid register number.\n");
+        return -1;
+    }
+}
