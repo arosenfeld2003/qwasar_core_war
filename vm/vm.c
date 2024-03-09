@@ -1,7 +1,5 @@
 #include "../include/header.h"
-#include "../include/vm_state.h"
 #include <fcntl.h> // open
-#include <unistd.h> // read, close
 #include <stdio.h> // perror
 #include <stdlib.h> // malloc, free
 
@@ -32,25 +30,40 @@ void free_vm(unsigned char *vm) {
 }
 
 int handle_cmd(vm_state_t *vm_state, unsigned char cmd) {
+    // current champion's state
+    champion_state_t *current_state = &vm_state->champions[vm_state->current_champion_index].state;
+
     switch (cmd) {
         case 0x01: { // live
             // next 4 bytes represent the player's number
-            int player_number = read_direct_value(vm_state->memory, vm_state->pc + 1);
+            int player_number = read_direct_value(vm_state->memory, vm_state->cycle_count + 1);
             printf("Player %d is alive\n", player_number);
-            vm_state->pc += 5; // Move past the instruction and its parameter
+            current_state->pc += 5;  // Update current champion's PC
+            vm_state->cycle_count += 5; // Move past the instruction and its parameter
             printf("cmd LIVE executed\n");
             break;
         }
         case 0x02: { // ld
-            // next bytes represent the value and the register number
-            int value = read_direct_value(vm_state->memory, vm_state->pc + 1); // Simplified
-            int reg_num = vm_state->memory[vm_state->pc + 5]; // Simplified
-            if (reg_num >= 1 && reg_num <= REG_NUMBER) {
-                vm_state->registers[reg_num - 1] = value;
-                printf("Loaded %d into r%d\n", value, reg_num);
+            int param_types = op_tab[1].type[0] | op_tab[1].type[1]; // combine flags
+            int value = 0;
+
+            // Parameter 1: Direct or Indirect fetch
+            if (param_types & T_DIR) {
+                value = read_direct_value(vm_state->memory, vm_state->cycle_count + 1);
+            } else if (param_types & T_IND) {
+                // ... (Indirect calculation and fetch)
+            } else {
+                // Invalid addressing mode - handle error!
             }
-            vm_state->pc += 6; // Adjust based on actual parameter sizes
-            printf("cmd LD executed\n");
+
+            // Parameter 2: Register
+            int reg_num = vm_state->memory[vm_state->cycle_count + 5];
+
+            // Load value into current champion register, update the PC
+            current_state->registers[reg_num - 1] = value;
+            current_state->pc += 6;
+
+            printf("ld instruction executed\n");
             break;
         }
         case 0x03:
@@ -163,50 +176,3 @@ void assign_program_numbers(champion_t champions[], int num_champions) {
         champions[i].id = i + 1; // Assign IDs starting from 1
     }
 }
-
-void load_champion(const char* file_path, int id, int start_address) {
-    // Placeholder for the actual loading logic
-    printf("Loading Champion: %s, ID: %d, Start Address: %d\n", file_path, id, start_address);
-}
-
-void load_programs_into_memory(vm_state_t vm, champion_t champions[], int num_champions) {
-    for (int i = 0; i < num_champions; ++i) {
-        int fd = open(champions[i].file_path, O_RDONLY);
-        if (fd == -1) {
-            perror("Error opening file");
-            exit(EXIT_FAILURE);
-        }
-
-        // Allocate memory for the program's code
-        champions[i].code = (unsigned char *)malloc(champions[i].size * sizeof(unsigned char));
-        if (champions[i].code == NULL) {
-            perror("Failed to allocate memory for champion code");
-            close(fd);
-            exit(EXIT_FAILURE);
-        }
-
-        // Read the program into the allocated buffer
-        ssize_t bytes_read = read(fd, champions[i].code, champions[i].size);
-        if (bytes_read == -1) {
-            perror("Error reading file");
-            free(champions[i].code);
-            close(fd);
-            exit(EXIT_FAILURE);
-        }
-
-        // Manually copy the program code into the VM's memory at the specified start address
-        for (ssize_t j = 0; j < bytes_read; ++j) {
-            // handle circular memory (we need to use modulo here)
-            // replace with the load_champion function above
-            vm.memory[champions[i].start_address + j] = champions[i].code[j];
-        }
-
-        // Clean up
-        close(fd);
-        // Free the allocated code -> is it still needed??
-        free(champions[i].code);
-        champions[i].code = NULL; // Avoid dangling pointer
-    }
-}
-
-

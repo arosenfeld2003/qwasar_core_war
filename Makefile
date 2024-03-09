@@ -11,8 +11,8 @@ corewar: $(OBJ)
 	$(CC) $(CFLAGS) -o corewar $(OBJ)
 
 # rule for the test executable
-test: $(TEST_OBJ)
-	$(CC) $(CFLAGS) -o test $(TEST_OBJ)
+test: $(TEST_OBJ) vm.o vm_utils.o helpers.o  instructions.o
+	$(CC) $(CFLAGS) -o test $(TEST_OBJ) vm.o vm_utils.o helpers.o instructions.o
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c

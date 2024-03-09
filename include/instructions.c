@@ -1,3 +1,4 @@
+#include "header.h"
 #include <stdio.h>
 
 /*
@@ -12,87 +13,39 @@ int inst_live(int player_num) {
     // Check if the player number is valid (within range)
     if (player_num >= 1 && player_num <= MAX_CHAMPIONS) {
         printf("Player %d is alive.\n", player_num);
-    } else {
-        // Handle error
-        printf("Player not found: %d\n", player_num);
+        return 1;
     }
+    // Handle error
+    printf("Player not found: %d\n", player_num);
+    return 0;
 }
-
-/*
- * Takes 2 parameters: loads the first parameter to the second parameter. Second
- * parameter is a register. Ex: ld 34, r3 loads the REG_SIZE bytes starting from
- * the Counter + 34 % IDX_MOD into r3.
- */
-int inst_ld(int offset) {
-//    int dest =
-}
-
-/*
- * Takes 2 parameters: Stores first parameter (a register) into the second
- * parameter (it can be another register or a number). Ex: st r4, 34 stores r4
- * at the address of Counter + 34 % IDX_MOD; st r3, r8 copies r3 into r8.
- */
-int inst_st()
-{
-
-}
-
-/*
- * Takes 3 parameters: 3 registers. Add the first to the second, and store the
- * result to the third. Modifies the carry.
- */
-int inst_add()
-{
-
-}
-
-/*
- * Same as add, but Subtracting. Modifies the carry.
- */
-int inst_sub()
-{
-
-}
-
-/*
- * Same as add, and sub, but does a binary operation AND between the first and
- * the second, and storing the result in the third parameter. Modifies the carry.
- */
-int inst_and() {
-
-}
-
-/*
- * Same as and, but performing an OR.
- */
-int inst_or() {
-
-}
-
-/*
- * Same as and and or, but performing an XOR.
- */
-int inst_xor() {
-
-}
-
-
 
 // Function to check if carry is 1 and perform a conditional jump
-void zjmp(int carry, int index) {
+void zjmp(int index) {
     if (carry == 1) {
         counter = (counter + index) % IDX_MOD; // Jump to index if carry is 1
     }
 }
 
 // Function to perform load indirect operation
-void ldi(int index1, int index2, int register_dest) {
-    int arg1 = get_arg_value(index1); // Get value at index1
-    int arg2 = get_arg_value(index2); // Get value at index2
-    int sum_result = (arg1 + arg2) % IDX_MOD; // Calculate sum modulo IDX_MOD
-    int value = read_memory(counter + sum_result); // Read memory at counter + sum_result
-    write_register(register_dest, value); // Write value to destination register
+void ld(int value, int register_dest) {
+    // Read value from memory
+    int address = (vm_state->champions[vm_state->current_champion_index].state.pc + value) % IDX_MOD;
+    int value_to_load = read_direct_value(vm_state->memory, address);
+
+    // basic error handling
+    if (register_dest < 1 || register_dest > REG_NUMBER) {
+        printf("Error: Invalid register number in 'ld' instruction.\n");
+        return;
+    }
+
+    // Store in the register of the CURRENT champion
+    vm_state->champions[vm_state->current_champion_index].state.registers[register_dest - 1] = value_to_load;
+
+    // Update PC of the CURRENT champion
+    vm_state->champions[vm_state->current_champion_index].state.pc += 6;
 }
+
 
 // Function to perform store indirect operation
 void sti(int register_source, int index1, int index2) {

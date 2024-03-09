@@ -27,7 +27,13 @@ enum parameter_types {
     T_LAB = 8
 };
 
-// TODO: Do we need to define champion struct more thoroughly here?
+// specific for each champion program
+typedef struct champion_state {
+    int registers[REG_NUMBER];
+    int pc;
+    int carry;
+} champion_state_t;
+
 typedef struct champion {
     int id; // program number
     char *name; // program name
@@ -35,7 +41,7 @@ typedef struct champion {
     unsigned char *code; // pointer to program code
     int start_address; // starting VM memory address
     char *file_path; // the file name to read champion code
-    // ??
+    champion_state_t state; // specific for each champion program
 } champion_t;
 
 typedef struct core_s core_t;
